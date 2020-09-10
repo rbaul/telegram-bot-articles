@@ -36,8 +36,7 @@ export class SpringFrameworkGuruArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error) // Error handling
-        );
+        ).catch(console.error);// Error handling;
     }
 
 }

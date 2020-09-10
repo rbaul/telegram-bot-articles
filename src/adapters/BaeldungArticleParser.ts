@@ -48,8 +48,7 @@ export class BaeldungArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error)// Error handling
-        );
+        ).catch(console.error);// Error handling
     }
 
     private javaWeeklyArticles(): Promise<void> {
@@ -81,8 +80,7 @@ export class BaeldungArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error) // Error handling
-        );
+        ).catch(console.error);// Error handling
     }
 
 }

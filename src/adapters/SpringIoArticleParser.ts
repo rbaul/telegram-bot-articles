@@ -36,8 +36,7 @@ export class SpringIoArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error) // Error handling
-        );
+        ).catch(console.error);// Error handling;
     }
 
     createArticle(title: string, articleUrl: string, site: SiteType): Article {
