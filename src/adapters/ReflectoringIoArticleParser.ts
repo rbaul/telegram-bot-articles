@@ -50,6 +50,6 @@ export class ReflectoringIoArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-        ).catch(console.error);// Error handling;
+        ).catch(error => console.error(`Failed read page '${fullUrl}' with error: ${error.message}`));// Error handling
     }
 }
