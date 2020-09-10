@@ -1,6 +1,7 @@
 import {Telegraf} from 'telegraf';
 import emoji from 'node-emoji-new';
-import {Article} from '../domain/model/Article';
+import {Article, ArticleType} from '../domain/model/Article';
+import {ArticleManager} from './ArticleManager';
 
 /**
  * Telegram Bot publisher
@@ -38,6 +39,9 @@ export class TelegramBotPublisher {
         const tagEmoji: string = isNewArticle ? this.newTagEmoji : this.oldTagEmoji;
         return this.sendMessage(process.env.CHANNEL_ID,
             `${tagEmoji} ${article.title}  \n\n ${article.url}`)
-            .then(value => article.published = true);
+            .then(value => {
+                article.published = true;
+                ArticleManager.incrementArticlePublished(ArticleType.SPRING);
+            });
     }
 }

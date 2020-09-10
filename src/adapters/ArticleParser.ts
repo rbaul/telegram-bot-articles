@@ -1,6 +1,8 @@
 import {Article, ArticleType, SiteType} from '../domain/model/Article';
 import {Repository} from '../domain/repositories/Repository';
 
+const numberOfPagesForUpdate = 2;
+
 export abstract class ArticleParser {
 
     repository: Repository<Article>;
@@ -10,6 +12,10 @@ export abstract class ArticleParser {
     }
 
     abstract init(): Promise<void>[];
+
+    updateArticles(): Promise<void>[] {
+        return this.readArticles(numberOfPagesForUpdate);
+    };
 
     getArticles(): Article[] {
         return this.repository.findAll();

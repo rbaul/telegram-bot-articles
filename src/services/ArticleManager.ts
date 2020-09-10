@@ -5,12 +5,14 @@ import {SpringIoArticleParser} from '../adapters/SpringIoArticleParser';
 import {SpringFrameworkGuruArticleParser} from '../adapters/SpringFrameworkGuruArticleParser';
 import axios, {AxiosInstance} from 'axios';
 import {Repository} from '../domain/repositories/Repository';
-import {Article} from '../domain/model/Article';
+import {Article, ArticleType} from '../domain/model/Article';
 import {TelegramBotPublisher} from './TelegramBotPublisher';
 import {EmbeddedRepository} from '../domain/repositories/EmbeddedRepository';
 import {ArticleListener} from '../domain/repositories/ArticleListener';
 
 export const axiosInstance: AxiosInstance = axios.create(); // Create a new Axios Instance
+
+export const dailyMaxNumberOfArticles: number = Number(process.env.DAILY_ARTICLES);
 
 /**
  * Article Manager Service
@@ -22,6 +24,8 @@ export class ArticleManager {
     repository: Repository<Article>;
 
     public static INIT_FINISH: boolean = false;
+
+    public static publishedDailyArticles: Map<ArticleType, number> = new Map<ArticleType, number>();
 
     constructor(repository: Repository<Article>) {
         this.repository = repository;
@@ -40,6 +44,25 @@ export class ArticleManager {
         });
     }
 
+    public static isCanPublishToday(articleType: ArticleType): boolean {
+        return this.getPublishedToday(articleType) < dailyMaxNumberOfArticles;
+    }
+
+    private static getPublishedToday(articleType: ArticleType) {
+        return this.publishedDailyArticles.get(articleType) | 0;
+    }
+
+    public static incrementArticlePublished(articleType: ArticleType): void {
+        if (!this.publishedDailyArticles.has(articleType)) {
+            this.publishedDailyArticles.set(articleType, 0);
+        }
+        this.publishedDailyArticles.set(articleType, this.publishedDailyArticles.get(articleType) + 1)
+    }
+
+    public static clearPublisherDailyCounter(): void {
+        this.publishedDailyArticles.clear();
+    }
+
     /**
      * Create Embedded Manager Instance
      */
@@ -52,20 +75,23 @@ export class ArticleManager {
      */
     public sync(): void {
         if (ArticleManager.INIT_FINISH) {
-            this.articleParsers.forEach(value => value.init());
+            this.articleParsers.forEach(value => value.updateArticles());
         }
-        this.publishRandomArchiveArticles();
     }
 
     /**
      * Publish archive articles
      */
     public publishRandomArchiveArticles(): void {
-        // Random Archive publish
-        // const numberArchiveToPublish: number = 1;
-        let articles: Article[] = this.repository.findAll()
-            .filter(value => value.needPublish && !value.published);
-        let article = articles[Math.floor(Math.random() * articles.length)];
-        TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article);
+        if (ArticleManager.INIT_FINISH) {
+
+            if (ArticleManager.isCanPublishToday(ArticleType.SPRING)) {
+                // Random Archive publish
+                let articles: Article[] = this.repository.findAll()
+                    .filter(value => value.needPublish && !value.published && value.type === ArticleType.SPRING);
+                let article = articles[Math.floor(Math.random() * articles.length)];
+                TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article);
+            }
+        }
     }
 }

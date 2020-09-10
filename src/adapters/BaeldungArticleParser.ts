@@ -5,13 +5,21 @@ import {axiosInstance} from '../services/ArticleManager';
 
 const javaWeeklyUrl = 'https://www.baeldung.com';
 const url = 'https://www.baeldung.com/category/spring/page/'; // URL we're scraping
-const numberOfPages = 41;
+const numberOfPages = 41
+const numberOfPagesForUpdate = 2;
 
 export class BaeldungArticleParser extends ArticleParser {
 
     init(): Promise<void>[] {
         let javaWeeklyArticles = this.javaWeeklyArticles();
         let readArticles = this.readArticles(numberOfPages);
+        readArticles.push(javaWeeklyArticles)
+        return readArticles;
+    }
+
+    updateArticles(): Promise<void>[] {
+        let javaWeeklyArticles = this.javaWeeklyArticles();
+        let readArticles = this.readArticles(numberOfPagesForUpdate);
         readArticles.push(javaWeeklyArticles)
         return readArticles;
     }

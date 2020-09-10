@@ -25,15 +25,28 @@ app.get('/', (req, res) => {
 
 app.listen(port, () => {
 
-    const rule: RecurrenceRule = new RecurrenceRule();
-    // rule.dayOfWeek = [0, new Range(0, 6)];
-    // rule.hour = 18;
-    // rule.minute = 0;
-    rule.second = 0;
-
-    scheduleJob(rule, fireDate => {
-        console.log('Schedule starting... Update all articles from all sources...');
+    // Sync all resources
+    const syncRecurrenceRule: RecurrenceRule = new RecurrenceRule();
+    syncRecurrenceRule.hour = [8, 12, 18];
+    scheduleJob(syncRecurrenceRule, fireDate => {
+        console.log(`${fireDate} - Update all articles from all sources and publish all new...`);
         articleManager.sync();
+    });
+
+    // Archive publisher scheduler
+    const dailyArchivePublisherRecurrenceRule: RecurrenceRule = new RecurrenceRule();
+    dailyArchivePublisherRecurrenceRule.hour = [9, 13, 19];
+    scheduleJob(dailyArchivePublisherRecurrenceRule, fireDate => {
+        console.log(`${fireDate} - Archive articles publish...`);
+        articleManager.publishRandomArchiveArticles();
+    });
+
+    // Daily clear counters
+    const dailyInitRecurrenceRule: RecurrenceRule = new RecurrenceRule();
+    dailyInitRecurrenceRule.hour = 0;
+    scheduleJob(dailyInitRecurrenceRule, fireDate => {
+        console.log(`${fireDate} - Init daily published counters...`);
+        ArticleManager.clearPublisherDailyCounter();
     });
 
     return console.log(`server is listening on ${port}`);
