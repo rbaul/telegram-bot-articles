@@ -2,10 +2,11 @@ import {ArticleType, SiteType} from '../domain/model/Article';
 import cheerio from "cheerio";
 import {ArticleParser} from './ArticleParser';
 import {axiosInstance} from '../services/ArticleManager';
+import {retry} from 'ts-retry-promise';
 
 const javaWeeklyUrl = 'https://www.baeldung.com';
 const url = 'https://www.baeldung.com/category/spring/page/'; // URL we're scraping
-const numberOfPages = 41
+const numberOfPages = 41;
 const numberOfPagesForUpdate = 2;
 
 export class BaeldungArticleParser extends ArticleParser {
@@ -28,7 +29,7 @@ export class BaeldungArticleParser extends ArticleParser {
         // Send an async HTTP Get request to the url
         const fullUrl: string = `${url}${pageNumber}`;
 
-        return axiosInstance.get(fullUrl)
+        return retry(() => axiosInstance.get(fullUrl)
             .then( // Once we have data returned ...
                 response => {
                     const html = response.data; // Get the HTML from the HTTP request
@@ -47,11 +48,12 @@ export class BaeldungArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error); // Error handling
+            .catch(console.error)// Error handling
+        );
     }
 
     private javaWeeklyArticles(): Promise<void> {
-        return axiosInstance.get(javaWeeklyUrl)
+        return retry(() => axiosInstance.get(javaWeeklyUrl)
             .then( // Once we have data returned ...
                 response => {
                     const html = response.data; // Get the HTML from the HTTP request
@@ -79,7 +81,8 @@ export class BaeldungArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error); // Error handling
+            .catch(console.error) // Error handling
+        );
     }
 
 }

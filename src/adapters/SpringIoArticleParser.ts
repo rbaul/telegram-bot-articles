@@ -2,6 +2,7 @@ import {Article, ArticleType, SiteType} from '../domain/model/Article';
 import cheerio from "cheerio";
 import {ArticleParser} from './ArticleParser';
 import {axiosInstance} from '../services/ArticleManager';
+import {retry} from 'ts-retry-promise';
 
 const url = 'https://spring.io/blog?page='; // URL we're scraping
 const numberOfPages = 10;
@@ -16,7 +17,7 @@ export class SpringIoArticleParser extends ArticleParser {
         // Send an async HTTP Get request to the url
         const fullUrl: string = `${url}${pageNumber}`;
 
-        return axiosInstance.get(fullUrl)
+        return retry(() => axiosInstance.get(fullUrl)
             .then( // Once we have data returned ...
                 response => {
                     const html = response.data; // Get the HTML from the HTTP request
@@ -35,7 +36,8 @@ export class SpringIoArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error); // Error handling
+            .catch(console.error) // Error handling
+        );
     }
 
     createArticle(title: string, articleUrl: string, site: SiteType): Article {

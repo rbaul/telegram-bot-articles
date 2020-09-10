@@ -3,6 +3,8 @@ import cheerio from "cheerio";
 import {ArticleParser} from './ArticleParser';
 import {axiosInstance} from '../services/ArticleManager';
 
+import {retry} from 'ts-retry-promise';
+
 const url = 'https://reflectoring.io/categories/spring-boot/page/'; // URL we're scraping
 const numberOfPages = 12;
 
@@ -29,7 +31,7 @@ export class ReflectoringIoArticleParser extends ArticleParser {
     }
 
     private readArticleByUrl(fullUrl: string): Promise<void> {
-        return axiosInstance.get(fullUrl)
+        return retry(() => axiosInstance.get(fullUrl)
             .then( // Once we have data returned ...
                 response => {
                     const html = response.data; // Get the HTML from the HTTP request
@@ -48,6 +50,7 @@ export class ReflectoringIoArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-            .catch(console.error); // Error handling
+            .catch(console.error) // Error handling
+        );
     }
 }
