@@ -11,6 +11,8 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 defaultRetryConfig.retries = 3;
+defaultRetryConfig.delay = 500;
+defaultRetryConfig.timeout = 4 * 60 * 1000;
 
 const articleManager: ArticleManager = ArticleManager.createEmbeddedManager();
 
