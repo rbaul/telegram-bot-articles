@@ -72,9 +72,7 @@ setInterval(() => {
     const keepAliveUrl: string = process.env.KEEP_ALIVE_URL;
     if (keepAliveUrl) {
         axiosInstance.get(keepAliveUrl)
-            .then((response) => {
-                console.log(response)
-            }).catch(error => `Failed execute Keep Alive: ${error.message}`);
+            .catch(error => `Failed execute Keep Alive: ${error.message}`);
     }
 }, Number(process.env.KEEP_ALIVE_INTERVAL_S) * 1000);
 
