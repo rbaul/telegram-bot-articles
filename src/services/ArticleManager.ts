@@ -41,6 +41,8 @@ export class ArticleManager {
         Promise.all(articleReadPromise).then(() => {
             console.log('Finish Initial loading...');
             ArticleManager.INIT_FINISH = true;
+            TelegramBotPublisher.getInstance()
+                .sendMessageToActivityLogChannel('Finish Initial loading...');
         });
     }
 
@@ -61,6 +63,7 @@ export class ArticleManager {
 
     public static clearPublisherDailyCounter(): void {
         this.publishedDailyArticles.clear();
+        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Clear publisher daily counters');
     }
 
     /**
@@ -74,6 +77,7 @@ export class ArticleManager {
      * Synchronize all articles from all sources
      */
     public sync(): void {
+        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Synchronize all articles from all sources');
         if (ArticleManager.INIT_FINISH) {
             this.articleParsers.forEach(value => value.updateArticles());
         }
@@ -83,6 +87,7 @@ export class ArticleManager {
      * Publish archive articles
      */
     public publishRandomArchiveArticles(): void {
+        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Publish archive articles');
         if (ArticleManager.INIT_FINISH) {
 
             if (ArticleManager.isCanPublishToday(ArticleType.SPRING)) {

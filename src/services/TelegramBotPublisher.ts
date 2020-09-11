@@ -27,21 +27,35 @@ export class TelegramBotPublisher {
 
     public sendMessage(channelId: string, message: string): Promise<any> {
         return this.bot.telegram.sendMessage(channelId, message)
-            .catch(console.error); // Error handling
+            .catch(error =>
+                console.error(`Failed send message '${message}' to '${channelId}', error: ${error.message}`)); // Error handling
     }
 
     public sendMessageToSpringChannel(message: string): Promise<any> {
         return this.sendMessage(process.env.CHANNEL_ID, message);
     }
 
-    public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): Promise<any> {
+    public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): void {
         console.log(`Publish ${JSON.stringify(article)}`);
         const tagEmoji: string = isNewArticle ? this.newTagEmoji : this.oldTagEmoji;
-        return this.sendMessage(process.env.CHANNEL_ID,
-            `${tagEmoji} ${article.title}  \n\n ${article.url}`)
+        const message: string = `${tagEmoji} ${article.title}  \n\n ${article.url}`;
+        this.sendMessage(process.env.CHANNEL_ID,
+            message)
             .then(value => {
                 article.published = true;
                 ArticleManager.incrementArticlePublished(ArticleType.SPRING);
-            });
+            }).catch(error =>
+            console.error(`Failed send article message '${message}' to Spring channel, error: ${error.message}`)); // Error handling
+    }
+
+    /**
+     * Send message to activity log channel
+     */
+    public sendMessageToActivityLogChannel(message: string): void {
+        this.sendMessage(process.env.ACTIVITY_LOG_APP_CHANNEL_ID,
+            `${process.env.npm_package_name} - ${message}`)
+            .catch(error =>
+                console.error(`Failed send activity log message '${message}' to Activity Log channel, error: ${error.message}`)); // Error handling
+        ;
     }
 }

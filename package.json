@@ -1,5 +1,5 @@
 {
-  "name": "first-telegram-bot",
+  "name": "telegram-bot-articles",
   "version": "1.0.0",
   "description": "",
   "main": "dist/app.js",
