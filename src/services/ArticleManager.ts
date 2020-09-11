@@ -39,10 +39,13 @@ export class ArticleManager {
         const articleReadPromise: Promise<void>[] = [];
         this.articleParsers.forEach(value => articleReadPromise.push(...value.init()));
         Promise.all(articleReadPromise).then(() => {
-            console.log('Finish Initial loading...');
+            const articlesCount = ArticleManager.mapToString(this.repository.getMapTypeCounts());
+            let message = `Finish Initial article loading, number of articles: ${this.repository.findAll().length} \n\n${articlesCount}`;
+            console.log(message);
             ArticleManager.INIT_FINISH = true;
+
             TelegramBotPublisher.getInstance()
-                .sendMessageToActivityLogChannel('Finish Initial loading...');
+                .sendMessageToActivityLogChannel(message);
         });
     }
 
@@ -98,5 +101,13 @@ export class ArticleManager {
                 TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article);
             }
         }
+    }
+
+    public static mapToString(map: Map<any, any>): string {
+        let ro = {};
+        for (let entry of map.entries()) {
+            ro[entry[0]] = entry[1];
+        }
+        return JSON.stringify(ro);
     }
 }

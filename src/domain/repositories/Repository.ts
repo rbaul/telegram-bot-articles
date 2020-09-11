@@ -16,4 +16,6 @@ export interface Repository<T> {
 
     findBySite(site: SiteType): T[];
 
+    getMapTypeCounts(): Map<SiteType, number>;
+
 }

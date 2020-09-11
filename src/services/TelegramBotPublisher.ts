@@ -53,7 +53,7 @@ export class TelegramBotPublisher {
      */
     public sendMessageToActivityLogChannel(message: string): void {
         this.sendMessage(process.env.ACTIVITY_LOG_APP_CHANNEL_ID,
-            `${process.env.npm_package_name} - ${message}`)
+            `${process.env.APP_NAME} - ${message}`)
             .catch(error =>
                 console.error(`Failed send activity log message '${message}' to Activity Log channel, error: ${error.message}`)); // Error handling
     }

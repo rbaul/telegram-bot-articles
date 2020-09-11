@@ -49,4 +49,15 @@ export class EmbeddedRepository implements Repository<Article> {
         return this.articles.has(url);
     }
 
+    /**
+     * Get articles number per site
+     */
+    getMapTypeCounts(): Map<SiteType, number> {
+        const map: Map<SiteType, number> = new Map<SiteType, number>();
+        for (let siteType in SiteType) {
+            let type = SiteType[siteType];
+            map.set(type, this.findBySite(type).length)
+        }
+        return map;
+    }
 }

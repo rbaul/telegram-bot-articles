@@ -11,6 +11,7 @@ Site references
 ## Requirements environment variables
 ``` env
 PORT=
+APP_NAME=telegram-bot-articles
 BOT_TOKEN=
 CHANNEL_ID=
 DAILY_ARTICLES=4

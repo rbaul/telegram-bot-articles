@@ -62,7 +62,7 @@ app.listen(port, () => {
         ArticleManager.clearPublisherDailyCounter();
     });
 
-    TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(`Started application... ${process.env.npm_package_description}`);
+    TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(`Started application...`);
     return console.log(`server is listening on ${port}`);
 })
 
