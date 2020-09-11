@@ -9,6 +9,7 @@ import {Article, ArticleType} from '../domain/model/Article';
 import {TelegramBotPublisher} from './TelegramBotPublisher';
 import {EmbeddedRepository} from '../domain/repositories/EmbeddedRepository';
 import {ArticleListener} from '../domain/repositories/ArticleListener';
+import {Utils} from '../Utils';
 
 export const axiosInstance: AxiosInstance = axios.create(); // Create a new Axios Instance
 
@@ -39,7 +40,7 @@ export class ArticleManager {
         const articleReadPromise: Promise<void>[] = [];
         this.articleParsers.forEach(value => articleReadPromise.push(...value.init()));
         Promise.all(articleReadPromise).then(() => {
-            const articlesCount = ArticleManager.mapToString(this.repository.getMapTypeCounts());
+            const articlesCount = Utils.mapToString(this.repository.getMapTypeCounts());
             let message = `Finish Initial article loading, number of articles: ${this.repository.findAll().length} \n\n${articlesCount}`;
             console.log(message);
             ArticleManager.INIT_FINISH = true;
@@ -82,6 +83,12 @@ export class ArticleManager {
     public sync(): void {
         TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Synchronize all articles from all sources');
         if (ArticleManager.INIT_FINISH) {
+            // const articleReadPromise: Promise<void>[] = [];
+            // this.articleParsers.forEach(value => articleReadPromise.push(...value.updateArticles()));
+            // Promise.all(articleReadPromise).then(() => {
+            //     this.publishRandomArchiveArticles(); // publish after update all articles
+            // });
+
             this.articleParsers.forEach(value => value.updateArticles());
         }
     }
@@ -103,11 +110,4 @@ export class ArticleManager {
         }
     }
 
-    public static mapToString(map: Map<any, any>): string {
-        let ro = {};
-        for (let entry of map.entries()) {
-            ro[entry[0]] = entry[1];
-        }
-        return JSON.stringify(ro);
-    }
 }

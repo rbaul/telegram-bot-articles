@@ -38,7 +38,7 @@ export class TelegramBotPublisher {
     public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): void {
         console.log(`Publish ${JSON.stringify(article)}`);
         const tagEmoji: string = isNewArticle ? this.newTagEmoji : this.oldTagEmoji;
-        const message: string = `${tagEmoji} ${article.title}  \n\n ${article.url}`;
+        const message: string = `${tagEmoji} ${article.title} \n\n ${article.url}`;
         this.sendMessage(process.env.CHANNEL_ID,
             message)
             .then(value => {
@@ -53,7 +53,7 @@ export class TelegramBotPublisher {
      */
     public sendMessageToActivityLogChannel(message: string): void {
         this.sendMessage(process.env.ACTIVITY_LOG_APP_CHANNEL_ID,
-            `${process.env.APP_NAME} - ${message}`)
+            `[${process.env.APP_NAME}]\n\n${message}`)
             .catch(error =>
                 console.error(`Failed send activity log message '${message}' to Activity Log channel, error: ${error.message}`)); // Error handling
     }
