@@ -1,9 +1,8 @@
 import express from 'express';
-import http from 'http';
 import {RecurrenceRule, scheduleJob} from 'node-schedule';
 import dotenv from 'dotenv';
 import {Article} from './domain/model/Article';
-import {ArticleManager} from './services/ArticleManager';
+import {ArticleManager, axiosInstance} from './services/ArticleManager';
 import {defaultRetryConfig} from 'ts-retry-promise';
 import {TelegramBotPublisher} from './services/TelegramBotPublisher';
 
@@ -20,7 +19,10 @@ defaultRetryConfig.timeout = 4 * 60 * 1000;
 
 const articleManager: ArticleManager = ArticleManager.createEmbeddedManager();
 
-app.get('/', ((req, res) => res.sendStatus(200)));
+app.get('/', ((req, res) => {
+    console.log('Keep Alive request');
+    res.sendStatus(200);
+}));
 
 app.get('/articles', (req, res) => {
 
@@ -69,7 +71,10 @@ app.listen(port, () => {
 setInterval(() => {
     const keepAliveUrl: string = process.env.KEEP_ALIVE_URL;
     if (keepAliveUrl) {
-        http.get(keepAliveUrl);
+        axiosInstance.get(keepAliveUrl)
+            .then((response) => {
+                console.log(response)
+            }).catch(error => `Failed execute Keep Alive: ${error.message}`);
     }
 }, Number(process.env.KEEP_ALIVE_INTERVAL_S) * 1000);
 
