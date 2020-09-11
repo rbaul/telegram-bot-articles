@@ -56,6 +56,5 @@ export class TelegramBotPublisher {
             `${process.env.npm_package_name} - ${message}`)
             .catch(error =>
                 console.error(`Failed send activity log message '${message}' to Activity Log channel, error: ${error.message}`)); // Error handling
-        ;
     }
 }
