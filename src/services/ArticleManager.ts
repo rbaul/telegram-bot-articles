@@ -49,6 +49,7 @@ export class ArticleManager implements ArticleListener {
             console.log(`Initialization from file '${articleDbJsonPath}'`);
             let articles: Article[] = Utils.fileToObject(articleDbJsonPath) as Article[];
             this.repository.saveAll(articles);
+            ArticleManager.INIT_FINISH = true;
         }
         this.initArticlesFromAllSites();
     }
