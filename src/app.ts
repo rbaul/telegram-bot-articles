@@ -1,5 +1,5 @@
 import express from 'express';
-import {RecurrenceRule, scheduleJob} from 'node-schedule';
+import {RecurrenceRule, RecurrenceSegment, scheduleJob} from 'node-schedule';
 import dotenv from 'dotenv';
 import {Article} from './domain/model/Article';
 import {ArticleManager, axiosInstance} from './services/ArticleManager';
@@ -12,6 +12,9 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 export const articleDbJsonPath = process.env.ARTICLES_DB_JSON_PATH;
+const timeZone: string = process.env.TIME_ZONE;
+const archiveScheduler: RecurrenceSegment = process.env.ARCHIVE_SCHEDULER_HOURS ? JSON.parse(process.env.ARCHIVE_SCHEDULER_HOURS) as RecurrenceSegment : null;
+const syncScheduler: RecurrenceSegment = process.env.SYNC_SCHEDULER_HOURS ? JSON.parse(process.env.SYNC_SCHEDULER_HOURS) as RecurrenceSegment : null;
 
 // Default Retry configuration
 defaultRetryConfig.retries = 3;
@@ -42,8 +45,9 @@ app.listen(port, () => {
 
     // Sync all resources
     const syncRecurrenceRule: RecurrenceRule = new RecurrenceRule();
-    syncRecurrenceRule.hour = [11, 15, 21];
+    syncRecurrenceRule.hour = syncScheduler;
     syncRecurrenceRule.minute = 0;
+    syncRecurrenceRule.tz = timeZone;
     scheduleJob(syncRecurrenceRule, fireDate => {
         console.log(`${fireDate} - Update all articles from all sources and publish all new...`);
         articleManager.sync();
@@ -51,8 +55,9 @@ app.listen(port, () => {
 
     // Archive publisher scheduler
     const dailyArchivePublisherRecurrenceRule: RecurrenceRule = new RecurrenceRule();
-    dailyArchivePublisherRecurrenceRule.hour = [12, 16, 22];
+    dailyArchivePublisherRecurrenceRule.hour = archiveScheduler;
     dailyArchivePublisherRecurrenceRule.minute = 0;
+    dailyArchivePublisherRecurrenceRule.tz = timeZone;
     scheduleJob(dailyArchivePublisherRecurrenceRule, fireDate => {
         console.log(`${fireDate} - Archive articles publish...`);
         articleManager.publishRandomArchiveArticles();
@@ -60,8 +65,9 @@ app.listen(port, () => {
 
     // Daily clear counters
     const dailyInitRecurrenceRule: RecurrenceRule = new RecurrenceRule();
-    dailyInitRecurrenceRule.hour = 3;
+    dailyInitRecurrenceRule.hour = 0;
     dailyInitRecurrenceRule.minute = 0;
+    dailyInitRecurrenceRule.tz = timeZone;
     scheduleJob(dailyInitRecurrenceRule, fireDate => {
         console.log(`${fireDate} - Init daily published counters...`);
         ArticleManager.clearPublisherDailyCounter();
