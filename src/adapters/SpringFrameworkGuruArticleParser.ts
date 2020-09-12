@@ -1,4 +1,4 @@
-import {SiteType} from '../domain/model/Article';
+import {Article, ArticleType, SiteType} from '../domain/model/Article';
 import cheerio from "cheerio";
 import {ArticleParser} from './ArticleParser';
 import {axiosInstance} from '../services/ArticleManager';
@@ -9,11 +9,11 @@ const numberOfPages = 17;
 
 export class SpringFrameworkGuruArticleParser extends ArticleParser {
 
-    init(): Promise<void>[] {
+    init(): Promise<void | Article[]>[] {
         return this.readArticles(numberOfPages);
     }
 
-    readArticlePage(pageNumber: number): Promise<void> {
+    readArticlePage(pageNumber: number): Promise<void | Article[]> {
         // Send an async HTTP Get request to the url
         const fullUrl: string = `${url}${pageNumber}`;
 
@@ -23,16 +23,16 @@ export class SpringFrameworkGuruArticleParser extends ArticleParser {
                     const html = response.data; // Get the HTML from the HTTP request
                     // console.log(html);
                     const $ = cheerio.load(html); // Load the HTML string into cheerio
-                    const statsTable: Cheerio = $('.entry-title > a'); // Parse the HTML and extract just whatever code contains .statsTableContainer and has tr inside
-                    statsTable.each((index, element) => {
-                        // let attribs: PostTitleAAttribs = element.attribs as PostTitleAAttribs;
+                    const contents: Cheerio = $('.entry-title > a');
+
+                    const articlesFromPage: Article[] = [];
+                    contents.each((index, element) => {
                         const attribs = element.attribs;
                         const articleUrl = attribs.href;
-                        if (!this.repository.isExistByUrl(articleUrl)) {
-                            const title = attribs.title;
-                            this.repository.save(this.createArticle(title, articleUrl, SiteType.Spring_Framework_Guru));
-                        }
-                    })
+                        const title = attribs.title;
+                        articlesFromPage.push(this.createArticle(title, articleUrl, SiteType.Spring_Framework_Guru, [ArticleType.SPRING]));
+                    });
+                    return articlesFromPage;
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )

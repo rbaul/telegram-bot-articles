@@ -12,6 +12,8 @@ export interface Repository<T> {
 
     save(t: T): T;
 
+    saveAll(t: T[]): T[];
+
     deleteByUrl(url: string): boolean;
 
     findBySite(site: SiteType): T[];

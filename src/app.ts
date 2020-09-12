@@ -11,6 +11,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT;
+export const articleDbJsonPath = process.env.ARTICLES_DB_JSON_PATH;
 
 // Default Retry configuration
 defaultRetryConfig.retries = 3;
@@ -36,6 +37,8 @@ app.get('/articles', (req, res) => {
 });
 
 app.listen(port, () => {
+
+    articleManager.init();
 
     // Sync all resources
     const syncRecurrenceRule: RecurrenceRule = new RecurrenceRule();

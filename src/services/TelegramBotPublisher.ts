@@ -1,7 +1,6 @@
 import {Telegraf} from 'telegraf';
 import emoji from 'node-emoji-new';
-import {Article, ArticleType} from '../domain/model/Article';
-import {ArticleManager} from './ArticleManager';
+import {Article} from '../domain/model/Article';
 
 /**
  * Telegram Bot publisher
@@ -35,17 +34,13 @@ export class TelegramBotPublisher {
         return this.sendMessage(process.env.CHANNEL_ID, message);
     }
 
-    public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): void {
+    public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): Promise<any | void> {
         console.log(`Publish ${JSON.stringify(article)}`);
         const tagEmoji: string = isNewArticle ? this.newTagEmoji : this.oldTagEmoji;
         const message: string = `${tagEmoji} ${article.title} \n\n ${article.url}`;
-        this.sendMessage(process.env.CHANNEL_ID,
-            message)
-            .then(value => {
-                article.published = true;
-                ArticleManager.incrementArticlePublished(ArticleType.SPRING);
-            }).catch(error =>
-            console.error(`Failed send article message '${message}' to Spring channel, error: ${error.message}`)); // Error handling
+        return this.sendMessage(process.env.CHANNEL_ID, message)
+            .catch(error =>
+                console.error(`Failed send article message '${message}' to Spring channel, error: ${error.message}`)); // Error handling
     }
 
     /**

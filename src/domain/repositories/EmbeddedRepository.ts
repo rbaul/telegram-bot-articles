@@ -1,16 +1,18 @@
 import {Repository} from './Repository';
 import {Article, SiteType} from '../model/Article';
 import {ArticleListener} from './ArticleListener';
+import {Utils} from '../../Utils';
+import {articleDbJsonPath} from '../../app';
 
 /**
  * Embedded implementation of repository
  */
 export class EmbeddedRepository implements Repository<Article> {
 
-    private readonly articleListener: ArticleListener;
+    private _articleListener: ArticleListener;
 
     constructor(articleListener?: ArticleListener) {
-        this.articleListener = articleListener;
+        this._articleListener = articleListener;
     }
 
     /**
@@ -18,6 +20,10 @@ export class EmbeddedRepository implements Repository<Article> {
      * Value - Article
      */
     private articles: Map<string, Article> = new Map<string, Article>();
+
+    set articleListener(value: ArticleListener) {
+        this._articleListener = value;
+    }
 
     findByUrl(url: string): Article {
         return this.articles.get(url);
@@ -28,12 +34,24 @@ export class EmbeddedRepository implements Repository<Article> {
     }
 
     save(article: Article): Article {
-        this.articles.set(article.url, article);
-        if (this.articleListener) {
-            this.articleListener.newArticle(article)
+        if (this.isExistByUrl(article.url)) {
+            this.articles.set(article.url, article);
+        } else {
+            this.articles.set(article.url, article);
+            if (this._articleListener) {
+                this._articleListener.newArticle(article)
+            }
         }
-        // ArticleListener.getInstance().newArticle(article);
         return this.findByUrl(article.url);
+    }
+
+    saveAll(articles: Article[]): Article[] {
+        const savedArticles = articles.filter(article => !this.isExistByUrl(article.url))
+            .map(article => this.save(article));
+        if (savedArticles && savedArticles.length > 0) { // Update DB json file for backup
+            Utils.objectToFile(articleDbJsonPath, this.findAll());
+        }
+        return savedArticles;
     }
 
     findBySite(site: SiteType): Article[] {

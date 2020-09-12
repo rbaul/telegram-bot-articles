@@ -16,5 +16,5 @@ export class Article {
     published: boolean;
     needPublish: boolean;
     site: SiteType;
-    type: ArticleType;
+    types: ArticleType[];
 }
