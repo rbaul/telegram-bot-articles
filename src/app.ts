@@ -41,8 +41,6 @@ app.get('/articles', (req, res) => {
 
 app.listen(port, () => {
 
-    articleManager.init();
-
     // Sync all resources
     const syncRecurrenceRule: RecurrenceRule = new RecurrenceRule();
     syncRecurrenceRule.hour = syncScheduler;
@@ -73,7 +71,21 @@ app.listen(port, () => {
         ArticleManager.clearPublisherDailyCounter();
     });
 
+    process.on('SIGTERM', () => {
+        console.log('SIGTERM received, cleaning up...');
+        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('SIGTERM received... Application shutdown...');
+        process.exit(0);
+    });
+
+    process.on('SIGINT', () => {
+        console.log('Received SIGINT. Press Control-D to exit.');
+        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Received SIGINT..  Application shutdown...');
+        process.exit(0);
+    });
+
     TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(`Started application...`);
+
+    articleManager.init();
     return console.log(`server is listening on ${port}`);
 })
 

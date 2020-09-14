@@ -1,16 +1,16 @@
-import {Article, ArticleType, ParserType, SiteType} from '../../domain/model/Article';
+import {Article, ArticleType, ParserType, SiteType} from '../domain/model/Article';
 import cheerio from "cheerio";
-import {ArticleParser} from '../ArticleParser';
-import {axiosInstance} from '../../services/ArticleManager';
+import {ArticleParser} from './ArticleParser';
+import {axiosInstance} from '../services/ArticleManager';
 import {retry} from 'ts-retry-promise';
 
-const url = 'https://spring.io/blog?page='; // URL we're scraping
-const numberOfPages = 10;
+const url = 'https://thorben-janssen.com/blog/page/'; // URL we're scraping
+const numberOfPages = 53;
 
-export class BlogsSpringIoArticleParser extends ArticleParser {
+export class ThorbenJanssenArticleParser extends ArticleParser {
 
     getType(): ParserType {
-        return ParserType.SPRING_IO_BLOGS;
+        return ParserType.THORBEN_JANSSEN;
     }
 
     getArticleType(): ArticleType[] {
@@ -22,11 +22,7 @@ export class BlogsSpringIoArticleParser extends ArticleParser {
     }
 
     getSite(): SiteType {
-        return SiteType.SpringIO;
-    }
-
-    isNeedPublish(): boolean {
-        return false;
+        return SiteType.THORBEN_JANSSEN;
     }
 
     getUrl(): string {
@@ -43,13 +39,13 @@ export class BlogsSpringIoArticleParser extends ArticleParser {
                     const html = response.data; // Get the HTML from the HTTP request
                     // console.log(html);
                     const $ = cheerio.load(html); // Load the HTML string into cheerio
-                    const contents: Cheerio = $('.blog--title > a');
+                    const contents: Cheerio = $('.thrv_wrapper > h2 > a');
 
                     const articlesFromPage: Article[] = [];
                     contents.each((index, element) => {
                         const attribs = element.attribs;
-                        const articleUrl = `https://spring.io${attribs.href}`;
-                        const title = element.children[0].data;
+                        const articleUrl = attribs.href;
+                        const title = element.children[0].children[0].children[0].data;
                         articlesFromPage.push(this.createArticle(title, articleUrl));
                     });
                     return articlesFromPage;

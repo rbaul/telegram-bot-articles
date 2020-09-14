@@ -15,6 +15,10 @@ import {JavaReflectoringIoArticleParser} from '../parsers/reflectoring_io/JavaRe
 import {SpringReflectoringIoArticleParser} from '../parsers/reflectoring_io/SpringReflectoringIoArticleParser';
 import {JavaCategoryBaeldungArticleParser} from '../parsers/baeldung/JavaCategoryBaeldungArticleParser';
 import {GuidesSpringIoArticleParser} from '../parsers/spring_io/GuidesSpringIoArticleParser';
+import {BetterJavaCodeArticleParser} from '../parsers/BetterJavaCodeArticleParser';
+import {ThorbenJanssenArticleParser} from '../parsers/ThorbenJanssenArticleParser';
+import {VladMihalceaArticleParser} from '../parsers/VladMihalceaArticleParser';
+import {JavaCodeGeeksArticleParser} from '../parsers/JavaCodeGeeksArticleParser';
 
 export const axiosInstance: AxiosInstance = axios.create(); // Create a new Axios Instance
 
@@ -43,7 +47,11 @@ export class ArticleManager implements ArticleListener {
             new SpringReflectoringIoArticleParser(),
             new BlogsSpringIoArticleParser(),
             new SpringFrameworkGuruArticleParser(),
-            new GuidesSpringIoArticleParser()
+            new GuidesSpringIoArticleParser(),
+            new BetterJavaCodeArticleParser(),
+            new ThorbenJanssenArticleParser(),
+            new VladMihalceaArticleParser(),
+            new JavaCodeGeeksArticleParser()
         ];
     }
 
@@ -54,7 +62,8 @@ export class ArticleManager implements ArticleListener {
         if (Utils.isFileExist(articleDbJsonPath)) {
             console.log(`Initialization from file '${articleDbJsonPath}'`);
             let articles: Article[] = Utils.fileToObject(articleDbJsonPath) as Article[];
-            this.repository.saveAll(articles);
+            const articlesSaved = this.repository.saveAll(articles);
+            this.loadingFinished(articlesSaved, 'json file');
             ArticleManager.INIT_FINISH = true;
         }
 
@@ -69,21 +78,23 @@ export class ArticleManager implements ArticleListener {
         const articleReadPromise: Promise<void | Article[]>[] = [];
         this.articleParsers.forEach(value => articleReadPromise.push(...value.init()));
         Promise.all(articleReadPromise).then((data) => {
-            this.updateArticlesFromAllResources(data);
-
-            this.initializationFinished();
+            const articlesSaved = this.updateArticlesFromAllResources(data);
+            this.loadingFinished(articlesSaved);
+            ArticleManager.INIT_FINISH = true;
         });
     }
 
     /**
      * Update articles from all resources
+     * @return articles that saved
      */
-    private updateArticlesFromAllResources(data: (void | Article[])[]) {
+    private updateArticlesFromAllResources(data: (void | Article[])[]): Article[] {
         const articlesMatrix: Article[][] = data.filter(value => value)
             .map(value => value as Article[]);
         const articles: Article[] = [].concat(...articlesMatrix);
+        let articlesThatSaved: Article[] = [];
 
-        const parserTypesPersisted: ParserType[] = this.repository.getAllParserTypes();
+        const parserTypesPersisted: ParserType[] = Utils.getAllParserTypes(this.repository.findAll());
         const newArticleParserNames: string[] = this.articleParsers
             .filter(parser => !parserTypesPersisted.includes(parser.getType()))
             .map(value => value.getType());
@@ -91,24 +102,25 @@ export class ArticleManager implements ArticleListener {
         if (newArticleParserNames.length > 0) { // New parser will not notify in init
             ArticleManager.INIT_FINISH = false;
             const articlesToSaveWithoutNotification = articles.filter(article => newArticleParserNames.includes(article.parser));
-            this.repository.saveAll(articlesToSaveWithoutNotification);
+            articlesThatSaved.push(...this.repository.saveAll(articlesToSaveWithoutNotification));
             ArticleManager.INIT_FINISH = true;
         }
 
         // TODO: delete
 
         const articlesToSaveWithNotification = articles.filter(article => !newArticleParserNames.includes(article.parser));
-        this.repository.saveAll(articlesToSaveWithNotification);
+        articlesThatSaved.push(...this.repository.saveAll(articlesToSaveWithNotification));
+        return articlesThatSaved;
     }
 
     /**
-     * Initialization Finished
+     * Loading Finished notification
      */
-    private initializationFinished() {
-        const articlesCount = Utils.mapToString(this.repository.getMapParserTypeCounts());
-        let message = `Finish Initial article loading, number of articles: ${this.repository.findAll().length} \n\n${articlesCount}`;
+    private loadingFinished(articles: Article[], from: string = 'sites') {
+        const articlesParserCount = Utils.mapToString(Utils.getMapParserTypeCounts(articles));
+        const articlesTypeCount = Utils.mapToString(Utils.getMapArticleTypeCounts(articles));
+        let message = `Finish article loading from ${from}, number of articles: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
         console.log(message);
-        ArticleManager.INIT_FINISH = true;
 
         TelegramBotPublisher.getInstance()
             .sendMessageToActivityLogChannel(message);
@@ -166,7 +178,8 @@ export class ArticleManager implements ArticleListener {
             const articleReadPromise: Promise<void | Article[]>[] = [];
             this.articleParsers.forEach(value => articleReadPromise.push(...value.updateArticles()));
             Promise.all(articleReadPromise).then((data) => {
-                this.updateArticlesFromAllResources(data);
+                const newArticles: Article[] = this.updateArticlesFromAllResources(data);
+                this.loadingFinished(newArticles);
             });
         }
     }
@@ -184,6 +197,9 @@ export class ArticleManager implements ArticleListener {
                     .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.SPRING));
                 let article = articles[Math.floor(Math.random() * articles.length)];
                 TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
+                if (article.types.includes(ArticleType.JAVA)) {
+                    TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
+                }
             }
 
             if (ArticleManager.isCanPublishToday(ArticleType.JAVA)) {
@@ -192,6 +208,9 @@ export class ArticleManager implements ArticleListener {
                     .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.JAVA));
                 let article = articles[Math.floor(Math.random() * articles.length)];
                 TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
+                if (article.types.includes(ArticleType.SPRING)) {
+                    TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
+                }
             }
         }
     }

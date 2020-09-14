@@ -1,4 +1,5 @@
 import {Article, ArticleType, ParserType, SiteType} from '../domain/model/Article';
+import {TelegramBotPublisher} from '../services/TelegramBotPublisher';
 
 const numberOfPagesForUpdate = 2;
 
@@ -55,6 +56,12 @@ export abstract class ArticleParser {
         article.title = title;
         article.url = articleUrl;
         return article;
+    }
+
+    handleError(url: string, error) {
+        const message = `Failed read page '${url}' with error: ${error.message}`;
+        console.error(message);
+        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(message, true);
     }
 
 }

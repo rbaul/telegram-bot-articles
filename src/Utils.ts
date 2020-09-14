@@ -1,4 +1,5 @@
 import fs from 'fs';
+import {Article, ArticleType, ParserType} from './domain/model/Article';
 
 export class Utils {
 
@@ -43,5 +44,44 @@ export class Utils {
             object[entry[0]] = entry[1];
         }
         return object;
+    }
+
+    /**
+     * Get articles number per parser
+     */
+    public static getMapParserTypeCounts(articles: Article[]): Map<ParserType, number> {
+        const map: Map<ParserType, number> = new Map<ParserType, number>();
+        for (let parserTypeKey in ParserType) {
+            let type = ParserType[parserTypeKey];
+            map.set(type, articles.filter(value => value.parser === type).length)
+        }
+        return map;
+    }
+
+    /**
+     * Get articles number per type
+     */
+    public static getMapArticleTypeCounts(articles: Article[]): Map<ArticleType, number> {
+        const map: Map<ArticleType, number> = new Map<ArticleType, number>();
+        for (let articleTypeKey in ArticleType) {
+            let type = ArticleType[articleTypeKey];
+            map.set(type, articles.filter(value => value.types.includes(type)).length)
+        }
+        return map;
+    }
+
+    /**
+     * Get all article parser types
+     */
+    public static getAllParserTypes(articles: Article[]): ParserType[] {
+        let mapParserTypeCounts = this.getMapParserTypeCounts(articles);
+        for (let parserTypeKey in ParserType) {
+            const type = ParserType[parserTypeKey];
+            const number = mapParserTypeCounts.get(type);
+            if (number === 0) {
+                mapParserTypeCounts.delete(type);
+            }
+        }
+        return Array.from(mapParserTypeCounts.keys());
     }
 }

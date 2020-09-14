@@ -62,7 +62,7 @@ export class JavaWeeklyBaeldungArticleParser extends ArticleParser {
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
-        ).catch(error => console.error(`Failed read page '${url}' with error: ${error.message}`));// Error handling
+        ).catch(error => this.handleError(url, error));// Error handling
     }
 
 }

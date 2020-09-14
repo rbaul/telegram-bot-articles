@@ -22,8 +22,4 @@ export interface Repository<T> {
 
     getMapTypeCounts(): Map<SiteType, number>;
 
-    getMapParserTypeCounts(): Map<ParserType, number>;
-
-    getAllParserTypes(): ParserType[];
-
 }
