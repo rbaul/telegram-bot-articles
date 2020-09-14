@@ -1,22 +1,25 @@
-import {Article, ArticleType, SiteType} from '../domain/model/Article';
+import {Article, SiteType} from '../../domain/model/Article';
 import cheerio from "cheerio";
-import {ArticleParser} from './ArticleParser';
-import {axiosInstance} from '../services/ArticleManager';
+import {ArticleParser} from '../ArticleParser';
+import {axiosInstance} from '../../services/ArticleManager';
 
 import {retry} from 'ts-retry-promise';
 
-const url = 'https://reflectoring.io/categories/spring-boot/page/'; // URL we're scraping
-const numberOfPages = 12;
+export abstract class ReflectoringIoArticleParser extends ArticleParser {
 
-export class ReflectoringIoArticleParser extends ArticleParser {
+    abstract getCategory(): string;
 
-    init(): Promise<void | Article[]>[] {
-        return this.readArticles(numberOfPages);
+    getSite(): SiteType {
+        return SiteType.ReflectoringIO;
+    }
+
+    getUrl(): string {
+        return `https://reflectoring.io/categories/${this.getCategory()}/page/`;
     }
 
     readArticles(numberOfPages: number): Promise<void | Article[]>[] {
         const pagePromises: Promise<void | Article[]>[] = [];
-        pagePromises.push(this.readArticleByUrl('https://reflectoring.io/categories/spring-boot/'));
+        pagePromises.push(this.readArticleByUrl(`https://reflectoring.io/categories/${this.getCategory()}/`));
         for (let i = 2; i <= numberOfPages; i++) {
             pagePromises.push(this.readArticlePage(i));
         }
@@ -25,7 +28,7 @@ export class ReflectoringIoArticleParser extends ArticleParser {
 
     readArticlePage(pageNumber: number): Promise<void | Article[]> {
         // Send an async HTTP Get request to the url
-        const fullUrl: string = `${url}${pageNumber}`;
+        const fullUrl: string = `${this.getUrl()}${pageNumber}`;
 
         return this.readArticleByUrl(fullUrl);
     }
@@ -45,7 +48,7 @@ export class ReflectoringIoArticleParser extends ArticleParser {
                         const attribs = element.attribs;
                         const articleUrl = `https://reflectoring.io${attribs.href}`;
                         const title = element.children[0].data;
-                        articlesFromPage.push(this.createArticle(title, articleUrl, SiteType.ReflectoringIO, [ArticleType.SPRING]));
+                        articlesFromPage.push(this.createArticle(title, articleUrl));
                     });
                     return articlesFromPage;
                     // console.log(`Finish read page: ${fullUrl}`)

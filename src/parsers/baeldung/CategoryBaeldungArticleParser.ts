@@ -1,26 +1,25 @@
-import {Article, ArticleType, SiteType} from '../domain/model/Article';
+import {Article, SiteType} from '../../domain/model/Article';
 import cheerio from "cheerio";
-import {ArticleParser} from './ArticleParser';
-import {axiosInstance} from '../services/ArticleManager';
+import {ArticleParser} from '../ArticleParser';
+import {axiosInstance} from '../../services/ArticleManager';
 import {retry} from 'ts-retry-promise';
 
-const url = 'https://www.baeldung.com/category/spring/page/'; // URL we're scraping
-const numberOfPages = 41;
-const numberOfPagesForUpdate = 2;
 
-export class SpringCategoryBaeldungArticleParser extends ArticleParser {
+export abstract class CategoryBaeldungArticleParser extends ArticleParser {
 
-    init(): Promise<void | Article[]>[] {
-        return this.readArticles(numberOfPages);
+    abstract getCategory(): string;
+
+    getSite(): SiteType {
+        return SiteType.BAELDUNG;
     }
 
-    updateArticles(): Promise<void | Article[]>[] {
-        return this.readArticles(numberOfPagesForUpdate);
+    getUrl(): string {
+        return `https://www.baeldung.com/category/${this.getCategory()}/page/`;
     }
 
     readArticlePage(pageNumber: number): Promise<void | Article[]> {
         // Send an async HTTP Get request to the url
-        const fullUrl: string = `${url}${pageNumber}`;
+        const fullUrl: string = `${this.getUrl()}${pageNumber}`;
 
         return retry(() => axiosInstance.get(fullUrl)
             .then( // Once we have data returned ...
@@ -35,7 +34,7 @@ export class SpringCategoryBaeldungArticleParser extends ArticleParser {
                         const attribs = element.attribs;
                         const articleUrl = attribs.href;
                         const title = attribs.title;
-                        articlesFromPage.push(this.createArticle(title, articleUrl, SiteType.BAELDUNG, [ArticleType.SPRING]));
+                        articlesFromPage.push(this.createArticle(title, articleUrl));
                     });
                     return articlesFromPage;
                     // console.log(`Finish read page: ${fullUrl}`)

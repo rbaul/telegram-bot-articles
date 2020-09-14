@@ -1,17 +1,20 @@
-import {ArticleParser} from '../adapters/ArticleParser';
-import {SpringCategoryBaeldungArticleParser} from '../adapters/SpringCategoryBaeldungArticleParser';
-import {ReflectoringIoArticleParser} from '../adapters/ReflectoringIoArticleParser';
-import {SpringIoArticleParser} from '../adapters/SpringIoArticleParser';
-import {SpringFrameworkGuruArticleParser} from '../adapters/SpringFrameworkGuruArticleParser';
+import {ArticleParser} from '../parsers/ArticleParser';
+import {SpringCategoryBaeldungArticleParser} from '../parsers/baeldung/SpringCategoryBaeldungArticleParser';
+import {BlogsSpringIoArticleParser} from '../parsers/spring_io/BlogsSpringIoArticleParser';
+import {SpringFrameworkGuruArticleParser} from '../parsers/SpringFrameworkGuruArticleParser';
 import axios, {AxiosInstance} from 'axios';
 import {Repository} from '../domain/repositories/Repository';
-import {Article, ArticleType} from '../domain/model/Article';
+import {Article, ArticleType, ParserType} from '../domain/model/Article';
 import {TelegramBotPublisher} from './TelegramBotPublisher';
 import {EmbeddedRepository} from '../domain/repositories/EmbeddedRepository';
 import {ArticleListener} from '../domain/repositories/ArticleListener';
 import {Utils} from '../Utils';
-import {JavaWeeklyBaeldungArticleParser} from '../adapters/JavaWeeklyBaeldungArticleParser';
+import {JavaWeeklyBaeldungArticleParser} from '../parsers/baeldung/JavaWeeklyBaeldungArticleParser';
 import {articleDbJsonPath} from '../app';
+import {JavaReflectoringIoArticleParser} from '../parsers/reflectoring_io/JavaReflectoringIoArticleParser';
+import {SpringReflectoringIoArticleParser} from '../parsers/reflectoring_io/SpringReflectoringIoArticleParser';
+import {JavaCategoryBaeldungArticleParser} from '../parsers/baeldung/JavaCategoryBaeldungArticleParser';
+import {GuidesSpringIoArticleParser} from '../parsers/spring_io/GuidesSpringIoArticleParser';
 
 export const axiosInstance: AxiosInstance = axios.create(); // Create a new Axios Instance
 
@@ -34,10 +37,13 @@ export class ArticleManager implements ArticleListener {
         this.repository = repository;
         this.articleParsers = [
             new JavaWeeklyBaeldungArticleParser(),
+            new JavaCategoryBaeldungArticleParser(),
             new SpringCategoryBaeldungArticleParser(),
-            new ReflectoringIoArticleParser(),
-            new SpringIoArticleParser(),
-            new SpringFrameworkGuruArticleParser()
+            new JavaReflectoringIoArticleParser(),
+            new SpringReflectoringIoArticleParser(),
+            new BlogsSpringIoArticleParser(),
+            new SpringFrameworkGuruArticleParser(),
+            new GuidesSpringIoArticleParser()
         ];
     }
 
@@ -51,6 +57,7 @@ export class ArticleManager implements ArticleListener {
             this.repository.saveAll(articles);
             ArticleManager.INIT_FINISH = true;
         }
+
         this.initArticlesFromAllSites();
     }
 
@@ -74,15 +81,31 @@ export class ArticleManager implements ArticleListener {
     private updateArticlesFromAllResources(data: (void | Article[])[]) {
         const articlesMatrix: Article[][] = data.filter(value => value)
             .map(value => value as Article[]);
-        const articles = [].concat(...articlesMatrix);
-        this.repository.saveAll(articles);
+        const articles: Article[] = [].concat(...articlesMatrix);
+
+        const parserTypesPersisted: ParserType[] = this.repository.getAllParserTypes();
+        const newArticleParserNames: string[] = this.articleParsers
+            .filter(parser => !parserTypesPersisted.includes(parser.getType()))
+            .map(value => value.getType());
+
+        if (newArticleParserNames.length > 0) { // New parser will not notify in init
+            ArticleManager.INIT_FINISH = false;
+            const articlesToSaveWithoutNotification = articles.filter(article => newArticleParserNames.includes(article.parser));
+            this.repository.saveAll(articlesToSaveWithoutNotification);
+            ArticleManager.INIT_FINISH = true;
+        }
+
+        // TODO: delete
+
+        const articlesToSaveWithNotification = articles.filter(article => !newArticleParserNames.includes(article.parser));
+        this.repository.saveAll(articlesToSaveWithNotification);
     }
 
     /**
      * Initialization Finished
      */
     private initializationFinished() {
-        const articlesCount = Utils.mapToString(this.repository.getMapTypeCounts());
+        const articlesCount = Utils.mapToString(this.repository.getMapParserTypeCounts());
         let message = `Finish Initial article loading, number of articles: ${this.repository.findAll().length} \n\n${articlesCount}`;
         console.log(message);
         ArticleManager.INIT_FINISH = true;
@@ -127,6 +150,10 @@ export class ArticleManager implements ArticleListener {
                 TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article, true)
                     .then(() => this.publishSuccess(article));
             }
+            if (article.types.includes(ArticleType.JAVA)) {
+                TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article, true)
+                    .then(() => this.publishSuccess(article));
+            }
         }
     }
 
@@ -157,6 +184,14 @@ export class ArticleManager implements ArticleListener {
                     .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.SPRING));
                 let article = articles[Math.floor(Math.random() * articles.length)];
                 TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
+            }
+
+            if (ArticleManager.isCanPublishToday(ArticleType.JAVA)) {
+                // Random Archive publish
+                let articles: Article[] = this.repository.findAll()
+                    .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.JAVA));
+                let article = articles[Math.floor(Math.random() * articles.length)];
+                TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
             }
         }
     }

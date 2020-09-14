@@ -1,5 +1,5 @@
 import {Repository} from './Repository';
-import {Article, SiteType} from '../model/Article';
+import {Article, ParserType, SiteType} from '../model/Article';
 import {ArticleListener} from './ArticleListener';
 import {Utils} from '../../Utils';
 import {articleDbJsonPath} from '../../app';
@@ -59,6 +59,11 @@ export class EmbeddedRepository implements Repository<Article> {
             .filter(value => value.site === site);
     }
 
+    findByParser(parserType: ParserType): Article[] {
+        return this.findAll()
+            .filter(value => value.parser === parserType);
+    }
+
     deleteByUrl(url: string): boolean {
         return this.articles.delete(url);
     }
@@ -78,4 +83,32 @@ export class EmbeddedRepository implements Repository<Article> {
         }
         return map;
     }
+
+    /**
+     * Get articles number per parser
+     */
+    getMapParserTypeCounts(): Map<ParserType, number> {
+        const map: Map<ParserType, number> = new Map<ParserType, number>();
+        for (let parserTypeKey in ParserType) {
+            let type = ParserType[parserTypeKey];
+            map.set(type, this.findByParser(type).length)
+        }
+        return map;
+    }
+
+    /**
+     * Get all article parser types
+     */
+    getAllParserTypes(): ParserType[] {
+        let mapParserTypeCounts = this.getMapParserTypeCounts();
+        for (let parserTypeKey in ParserType) {
+            const type = ParserType[parserTypeKey];
+            const number = mapParserTypeCounts.get(type);
+            if (number === 0) {
+                mapParserTypeCounts.delete(type);
+            }
+        }
+        return Array.from(mapParserTypeCounts.keys());
+    }
+
 }

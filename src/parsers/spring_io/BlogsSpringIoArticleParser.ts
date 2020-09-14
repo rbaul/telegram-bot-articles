@@ -1,16 +1,36 @@
-import {Article, ArticleType, SiteType} from '../domain/model/Article';
+import {Article, ArticleType, ParserType, SiteType} from '../../domain/model/Article';
 import cheerio from "cheerio";
-import {ArticleParser} from './ArticleParser';
-import {axiosInstance} from '../services/ArticleManager';
+import {ArticleParser} from '../ArticleParser';
+import {axiosInstance} from '../../services/ArticleManager';
 import {retry} from 'ts-retry-promise';
 
-const url = 'https://springframework.guru/blog/page/'; // URL we're scraping
-const numberOfPages = 17;
+const url = 'https://spring.io/blog?page='; // URL we're scraping
+const numberOfPages = 10;
 
-export class SpringFrameworkGuruArticleParser extends ArticleParser {
+export class BlogsSpringIoArticleParser extends ArticleParser {
 
-    init(): Promise<void | Article[]>[] {
-        return this.readArticles(numberOfPages);
+    getType(): ParserType {
+        return ParserType.SPRING_IO_BLOGS;
+    }
+
+    getArticleType(): ArticleType[] {
+        return [ArticleType.SPRING];
+    }
+
+    getNumberOfPages(): number {
+        return numberOfPages;
+    }
+
+    getSite(): SiteType {
+        return SiteType.SpringIO;
+    }
+
+    isNeedPublish(): boolean {
+        return false;
+    }
+
+    getUrl(): string {
+        return url;
     }
 
     readArticlePage(pageNumber: number): Promise<void | Article[]> {
@@ -23,14 +43,14 @@ export class SpringFrameworkGuruArticleParser extends ArticleParser {
                     const html = response.data; // Get the HTML from the HTTP request
                     // console.log(html);
                     const $ = cheerio.load(html); // Load the HTML string into cheerio
-                    const contents: Cheerio = $('.entry-title > a');
+                    const contents: Cheerio = $('.blog--title > a');
 
                     const articlesFromPage: Article[] = [];
                     contents.each((index, element) => {
                         const attribs = element.attribs;
-                        const articleUrl = attribs.href;
-                        const title = attribs.title;
-                        articlesFromPage.push(this.createArticle(title, articleUrl, SiteType.Spring_Framework_Guru, [ArticleType.SPRING]));
+                        const articleUrl = `https://spring.io${attribs.href}`;
+                        const title = element.children[0].data;
+                        articlesFromPage.push(this.createArticle(title, articleUrl));
                     });
                     return articlesFromPage;
                     // console.log(`Finish read page: ${fullUrl}`)

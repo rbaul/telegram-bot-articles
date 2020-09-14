@@ -1,4 +1,4 @@
-import {SiteType} from '../model/Article';
+import {ParserType, SiteType} from '../model/Article';
 
 /**
  * Repository interface
@@ -18,6 +18,12 @@ export interface Repository<T> {
 
     findBySite(site: SiteType): T[];
 
+    findByParser(parserType: ParserType): T[]
+
     getMapTypeCounts(): Map<SiteType, number>;
+
+    getMapParserTypeCounts(): Map<ParserType, number>;
+
+    getAllParserTypes(): ParserType[];
 
 }

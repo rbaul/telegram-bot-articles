@@ -1,16 +1,32 @@
-import {Article, ArticleType, SiteType} from '../domain/model/Article';
+import {Article, ArticleType, ParserType, SiteType} from '../domain/model/Article';
 import cheerio from "cheerio";
 import {ArticleParser} from './ArticleParser';
 import {axiosInstance} from '../services/ArticleManager';
 import {retry} from 'ts-retry-promise';
 
-const url = 'https://spring.io/blog?page='; // URL we're scraping
-const numberOfPages = 10;
+const url = 'https://springframework.guru/blog/page/'; // URL we're scraping
+const numberOfPages = 17;
 
-export class SpringIoArticleParser extends ArticleParser {
+export class SpringFrameworkGuruArticleParser extends ArticleParser {
 
-    init(): Promise<void | Article[]>[] {
-        return this.readArticles(numberOfPages);
+    getType(): ParserType {
+        return ParserType.SPRING_FRAMEWORK_GURU;
+    }
+
+    getArticleType(): ArticleType[] {
+        return [ArticleType.SPRING];
+    }
+
+    getNumberOfPages(): number {
+        return numberOfPages;
+    }
+
+    getSite(): SiteType {
+        return SiteType.Spring_Framework_Guru;
+    }
+
+    getUrl(): string {
+        return url;
     }
 
     readArticlePage(pageNumber: number): Promise<void | Article[]> {
@@ -23,31 +39,20 @@ export class SpringIoArticleParser extends ArticleParser {
                     const html = response.data; // Get the HTML from the HTTP request
                     // console.log(html);
                     const $ = cheerio.load(html); // Load the HTML string into cheerio
-                    const contents: Cheerio = $('.blog--title > a');
+                    const contents: Cheerio = $('.entry-title > a');
 
                     const articlesFromPage: Article[] = [];
                     contents.each((index, element) => {
                         const attribs = element.attribs;
-                        const articleUrl = `https://spring.io${attribs.href}`;
-                        const title = element.children[0].data;
-                        articlesFromPage.push(this.createArticle(title, articleUrl, SiteType.SpringIO));
+                        const articleUrl = attribs.href;
+                        const title = attribs.title;
+                        articlesFromPage.push(this.createArticle(title, articleUrl));
                     });
                     return articlesFromPage;
                     // console.log(`Finish read page: ${fullUrl}`)
                 }
             )
         ).catch(error => console.error(`Failed read page '${fullUrl}' with error: ${error.message}`));// Error handling
-    }
-
-    createArticle(title: string, articleUrl: string, site: SiteType): Article {
-        return {
-            title: title,
-            site: site,
-            url: articleUrl,
-            published: false,
-            needPublish: false,
-            types: [ArticleType.SPRING]
-        };
     }
 
 }
