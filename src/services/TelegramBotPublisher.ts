@@ -30,10 +30,10 @@ export class TelegramBotPublisher {
 
     public sendMessage(channelId: string, message: string): Promise<any> {
         return this.bot.telegram.sendMessage(channelId, message);
-            // .catch(error => {
-            //     console.error(`Failed send message '${message}' to '${channelId}', error: ${error.message}`);
-            //     throw error;
-            // }); // Error handling
+        // .catch(error => {
+        //     console.error(`Failed send message '${message}' to '${channelId}', error: ${error.message}`);
+        //     throw error;
+        // }); // Error handling
     }
 
     public sendArticleToJavaChannel(article: Article, isNewArticle?: boolean): Promise<any | void> {
@@ -58,6 +58,13 @@ export class TelegramBotPublisher {
         const message: string = `${tagEmoji} ${article.title} \n\n ${article.url}`;
         return retry(() => this.sendMessage(channelId, message));
         // return this.sendMessage(channelId, message);
+    }
+
+    /**
+     * Send error message to activity log channel
+     */
+    public sendErrorMessageToActivityLogChannel(message: string): void {
+        this.sendMessageToActivityLogChannel(message, true);
     }
 
     /**

@@ -119,7 +119,7 @@ export class ArticleManager implements ArticleListener {
     private loadingFinished(articles: Article[], from: string = 'sites') {
         const articlesParserCount = Utils.mapToString(Utils.getMapParserTypeCounts(articles));
         const articlesTypeCount = Utils.mapToString(Utils.getMapArticleTypeCounts(articles));
-        let message = `Finish article loading from ${from}, number of articles: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
+        let message = `Finish article loading from ${from}, number of articles added: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
         console.log(message);
 
         TelegramBotPublisher.getInstance()

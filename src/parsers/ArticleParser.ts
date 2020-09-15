@@ -61,7 +61,7 @@ export abstract class ArticleParser {
     handleError(url: string, error) {
         const message = `Failed read page '${url}' with error: ${error.message}`;
         console.error(message);
-        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(message, true);
+        TelegramBotPublisher.getInstance().sendErrorMessageToActivityLogChannel(message);
     }
 
 }
