@@ -19,7 +19,7 @@ const syncScheduler: RecurrenceSegment = process.env.SYNC_SCHEDULER_HOURS ? JSON
 // Default Retry configuration
 defaultRetryConfig.retries = 3;
 defaultRetryConfig.delay = 500;
-defaultRetryConfig.timeout = Number(process.env.RETRY_TIMEOUT) * 20 * 1000;
+defaultRetryConfig.timeout = Number(process.env.RETRY_TIMEOUT) * 60 * 1000;
 
 const articleManager: ArticleManager = ArticleManager.createEmbeddedManager();
 

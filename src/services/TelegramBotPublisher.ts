@@ -24,7 +24,6 @@ export class TelegramBotPublisher {
         this.bot = new Telegraf(process.env.BOT_TOKEN);
 
         this.bot.command('status', ctx => {
-            console.log('Status command received...')
             if (this.commandListener) {
                 return this.commandListener.commandStatus(ctx);
             }
@@ -72,7 +71,9 @@ export class TelegramBotPublisher {
     public sendArticleToJavaChannel(article: Article, isNewArticle?: boolean): Promise<any | void> {
         return this.sendArticleToChannel(process.env.JAVA_CHANNEL_ID, article, isNewArticle)
             .catch(error => {
-                console.error(`Failed send article message '${JSON.stringify(article)}' to Java channel, error: ${error.message}`)
+                const errorMessage = `Failed send article message '${JSON.stringify(article)}' to Java channel, error: ${error.message}`;
+                console.error(errorMessage)
+                this.sendErrorMessageToActivityLogChannel(errorMessage);
                 throw error;
             }); // Error handling
     }
@@ -80,7 +81,9 @@ export class TelegramBotPublisher {
     public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): Promise<any | void> {
         return this.sendArticleToChannel(process.env.SPRING_CHANNEL_ID, article, isNewArticle)
             .catch(error => {
-                console.error(`Failed send article message '${JSON.stringify(article)}' to Spring channel, error: ${error.message}`);
+                const errorMessage: string = `Failed send article message '${JSON.stringify(article)}' to Spring channel, error: ${error.message}`;
+                console.error(errorMessage);
+                this.sendErrorMessageToActivityLogChannel(errorMessage);
                 throw error;
             }); // Error handling
     }

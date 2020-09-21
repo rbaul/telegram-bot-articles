@@ -64,7 +64,7 @@ export abstract class ArticleParser {
         // Send an async HTTP Get request to the url
         const fullUrl: string = this.getFullUrl(pageNumber);
 
-        return retry(() => axiosInstance.get(fullUrl)
+        return retry(() => axiosInstance.get(fullUrl))
             .then(response => {
                 if (!response.request._redirectable._currentUrl.includes(response.config.url)) {
                     throw new Error(`Redirect to '${response.request._redirectable._currentUrl}'`);
@@ -84,8 +84,7 @@ export abstract class ArticleParser {
                     throw new Error(`No articles found on this page`);
                 }
                 return articles;
-            })
-        ).catch(error => this.handleError(fullUrl, error));// Error handling
+            }).catch(error => this.handleError(fullUrl, error));// Error handling
     }
 
     createArticle(title: string, articleUrl: string): Article {
