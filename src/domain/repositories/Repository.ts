@@ -20,6 +20,9 @@ export interface Repository<T> {
 
     findByParser(parserType: ParserType): T[]
 
+    findByParserIn(parserTypes: ParserType[]): T[]
+
     getMapTypeCounts(): Map<SiteType, number>;
 
+    deleteByParserTypeIn(parserTypes: ParserType[]): void;
 }

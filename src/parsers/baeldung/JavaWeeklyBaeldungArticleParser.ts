@@ -1,12 +1,11 @@
 import {Article, ArticleType, ParserType, SiteType} from '../../domain/model/Article';
-import cheerio from "cheerio";
 import {ArticleParser} from '../ArticleParser';
-import {axiosInstance} from '../../services/ArticleManager';
-import {retry} from 'ts-retry-promise';
 
 const url = 'https://www.baeldung.com';
 
 export class JavaWeeklyBaeldungArticleParser extends ArticleParser {
+
+    private readonly selector = '.thrv_wrapper > p > .tve-froala';
 
     getType(): ParserType {
         return ParserType.JAVA_WEEKLY_BAELDUNG;
@@ -32,37 +31,29 @@ export class JavaWeeklyBaeldungArticleParser extends ArticleParser {
         return false;
     }
 
-    init(): Promise<void | Article[]>[] {
+    getAll(): Promise<void | Article[]>[] {
         return [this.readArticlePage()];
     }
 
-    updateArticles(): Promise<void | Article[]>[] {
+    getLatest(): Promise<void | Article[]>[] {
         return [this.readArticlePage()];
     }
 
-    readArticlePage(): Promise<void | Article[]> {
-        return retry(() => axiosInstance.get(url)
-            .then( // Once we have data returned ...
-                response => {
-                    const html = response.data; // Get the HTML from the HTTP request
-                    // console.log(html);
-                    const $ = cheerio.load(html); // Load the HTML string into cheerio
-                    const contents: Cheerio = $('.thrv_wrapper > p > .tve-froala');
+    public getElementSelector(): string {
+        return this.selector;
+    }
 
-                    const articlesFromPage: Article[] = [];
-                    contents.each((index, element) => {
-                        const attribs = element.attribs;
-                        const articleUrl = `${url}${attribs.href}`;
-                        if (attribs.href.includes('/java-weekly')) {
-                            const title = element.children[0].data;
-                            articlesFromPage.push(this.createArticle(title, articleUrl));
-                        }
-                    });
-                    return articlesFromPage;
-                    // console.log(`Finish read page: ${fullUrl}`)
-                }
-            )
-        ).catch(error => this.handleError(url, error));// Error handling
+    public getArticlesFromPage(contents: Cheerio): Article[] {
+        const articlesFromPage: Article[] = [];
+        contents.each((index, element) => {
+            const attribs = element.attribs;
+            const articleUrl = `${url}${attribs.href}`;
+            if (attribs.href.includes('/java-weekly')) {
+                const title = element.children[0].data;
+                articlesFromPage.push(this.createArticle(title, articleUrl));
+            }
+        });
+        return articlesFromPage;
     }
 
 }

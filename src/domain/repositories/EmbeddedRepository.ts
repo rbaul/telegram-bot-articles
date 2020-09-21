@@ -64,8 +64,18 @@ export class EmbeddedRepository implements Repository<Article> {
             .filter(value => value.parser === parserType);
     }
 
+    findByParserIn(parserTypes: ParserType[]): Article[] {
+        return this.findAll()
+            .filter(value => parserTypes.includes(value.parser));
+    }
+
     deleteByUrl(url: string): boolean {
         return this.articles.delete(url);
+    }
+
+    deleteByParserTypeIn(parserTypes: ParserType[]): void {
+        this.findByParserIn(parserTypes)
+            .forEach(article => this.deleteByUrl(article.url));
     }
 
     isExistByUrl(url: string): boolean {

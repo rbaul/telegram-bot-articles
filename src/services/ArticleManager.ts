@@ -19,6 +19,7 @@ import {BetterJavaCodeArticleParser} from '../parsers/BetterJavaCodeArticleParse
 import {ThorbenJanssenArticleParser} from '../parsers/ThorbenJanssenArticleParser';
 import {VladMihalceaArticleParser} from '../parsers/VladMihalceaArticleParser';
 import {JavaCodeGeeksArticleParser} from '../parsers/JavaCodeGeeksArticleParser';
+import {TelegramBotCommandListener} from './TelegramBotCommandListener';
 
 export const axiosInstance: AxiosInstance = axios.create(); // Create a new Axios Instance
 
@@ -27,7 +28,7 @@ export const dailyMaxNumberOfArticles: number = Number(process.env.DAILY_ARTICLE
 /**
  * Article Manager Service
  */
-export class ArticleManager implements ArticleListener {
+export class ArticleManager implements ArticleListener, TelegramBotCommandListener {
 
     articleParsers: ArticleParser[] = [];
 
@@ -59,58 +60,64 @@ export class ArticleManager implements ArticleListener {
      * Initialization
      */
     public init() {
+        TelegramBotPublisher.getInstance().setCommandListener(this);
+
         if (Utils.isFileExist(articleDbJsonPath)) {
             console.log(`Initialization from file '${articleDbJsonPath}'`);
             let articles: Article[] = Utils.fileToObject(articleDbJsonPath) as Article[];
             const articlesSaved = this.repository.saveAll(articles);
             this.loadingFinished(articlesSaved, 'json file');
-            ArticleManager.INIT_FINISH = true;
+            this.initParserArticlesFromResource(Utils.getAllParserTypes(this.repository.findAll()));
+        } else { // No stored articles
+            this.initParserArticlesFromResource();
         }
 
-        this.initArticlesFromAllSites();
-    }
+        // Delete no need articles
+        // this.deleteArticlesWithoutParser();
 
-    /**
-     * Initialization articles from all resources
-     */
-    private initArticlesFromAllSites() {
-        console.log('Initialization from all resources');
-        const articleReadPromise: Promise<void | Article[]>[] = [];
-        this.articleParsers.forEach(value => articleReadPromise.push(...value.init()));
-        Promise.all(articleReadPromise).then((data) => {
-            const articlesSaved = this.updateArticlesFromAllResources(data);
-            this.loadingFinished(articlesSaved);
-            ArticleManager.INIT_FINISH = true;
-        });
     }
 
     /**
      * Update articles from all resources
      * @return articles that saved
      */
-    private updateArticlesFromAllResources(data: (void | Article[])[]): Article[] {
+    private updateArticles(data: (void | Article[])[]): Article[] {
         const articlesMatrix: Article[][] = data.filter(value => value)
             .map(value => value as Article[]);
         const articles: Article[] = [].concat(...articlesMatrix);
-        let articlesThatSaved: Article[] = [];
+        return this.repository.saveAll(articles);
+    }
 
-        const parserTypesPersisted: ParserType[] = Utils.getAllParserTypes(this.repository.findAll());
-        const newArticleParserNames: string[] = this.articleParsers
-            .filter(parser => !parserTypesPersisted.includes(parser.getType()))
-            .map(value => value.getType());
+    /**
+     * Init articles with new parser
+     */
+    public initParserArticlesFromResource(excludeParser: ParserType[] = []): void {
+        console.log('Initialization from all resources');
+        const articleReadPromise: Promise<void | Article[]>[] = [];
+        ArticleManager.INIT_FINISH = false;
 
-        if (newArticleParserNames.length > 0) { // New parser will not notify in init
-            ArticleManager.INIT_FINISH = false;
-            const articlesToSaveWithoutNotification = articles.filter(article => newArticleParserNames.includes(article.parser));
-            articlesThatSaved.push(...this.repository.saveAll(articlesToSaveWithoutNotification));
+        this.articleParsers
+            .filter(parser => !excludeParser.includes(parser.getType()))
+            .forEach(value => articleReadPromise.push(...value.getAll()));
+        Promise.all(articleReadPromise).then((data) => {
+            const articlesSaved = this.updateArticles(data);
+            this.loadingFinished(articlesSaved);
             ArticleManager.INIT_FINISH = true;
+        });
+
+    }
+
+    /**
+     * Delete articles without parser
+     */
+    public deleteArticlesWithoutParser(): void {
+        const parserTypesPersisted: ParserType[] = Utils.getAllParserTypes(this.repository.findAll());
+        let parserTypes = this.articleParsers.map(value => value.getType());
+        const deleteArticleParserTypes: ParserType[] = parserTypesPersisted
+            .filter(parserName => !parserTypes.includes(parserName));
+        if (deleteArticleParserTypes.length > 0) {
+            this.repository.deleteByParserTypeIn(deleteArticleParserTypes);
         }
-
-        // TODO: delete
-
-        const articlesToSaveWithNotification = articles.filter(article => !newArticleParserNames.includes(article.parser));
-        articlesThatSaved.push(...this.repository.saveAll(articlesToSaveWithNotification));
-        return articlesThatSaved;
     }
 
     /**
@@ -119,7 +126,7 @@ export class ArticleManager implements ArticleListener {
     private loadingFinished(articles: Article[], from: string = 'sites') {
         const articlesParserCount = Utils.mapToString(Utils.getMapParserTypeCounts(articles));
         const articlesTypeCount = Utils.mapToString(Utils.getMapArticleTypeCounts(articles));
-        let message = `Finish article loading from ${from}, number of articles added: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
+        const message = `Finish article loading from ${from}, number of articles added: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
         console.log(message);
 
         TelegramBotPublisher.getInstance()
@@ -176,9 +183,9 @@ export class ArticleManager implements ArticleListener {
         TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Synchronize all articles from all sources');
         if (ArticleManager.INIT_FINISH) {
             const articleReadPromise: Promise<void | Article[]>[] = [];
-            this.articleParsers.forEach(value => articleReadPromise.push(...value.updateArticles()));
+            this.articleParsers.forEach(value => articleReadPromise.push(...value.getLatest()));
             Promise.all(articleReadPromise).then((data) => {
-                const newArticles: Article[] = this.updateArticlesFromAllResources(data);
+                const newArticles: Article[] = this.updateArticles(data);
                 this.loadingFinished(newArticles);
             });
         }
@@ -224,4 +231,41 @@ export class ArticleManager implements ArticleListener {
         Utils.objectToFile(process.env.ARTICLES_DB_JSON_PATH, this.repository.findAll());
         ArticleManager.incrementArticlePublished(ArticleType.SPRING);
     }
+
+    commandDelete(ctx: any): any {
+        if (ArticleManager.INIT_FINISH) {
+            this.deleteArticlesWithoutParser();
+            return ctx.reply('Delete all articles without parser');
+        } else {
+            return ctx.reply('Failed Delete all articles without parser: still in progress');
+        }
+    }
+
+    commandInit(ctx: any): any {
+        if (ArticleManager.INIT_FINISH) {
+            this.initParserArticlesFromResource();
+            return ctx.reply('Init all articles started');
+        } else {
+            return ctx.reply('Failed init articles started: still in progress');
+        }
+    }
+
+    commandSync(ctx: any): any {
+        if (ArticleManager.INIT_FINISH) {
+            this.sync();
+            return ctx.reply('Synchronize started');
+        } else {
+            return ctx.reply('Failed Synchronize started: still in progress');
+        }
+    }
+
+    commandStatus(ctx: any): any {
+        const articles = this.repository.findAll();
+        const articlesParserCount = Utils.mapToString(Utils.getMapParserTypeCounts(articles));
+        const articlesTypeCount = Utils.mapToString(Utils.getMapArticleTypeCounts(articles));
+        const message = `*Articles status*: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
+        return ctx.replyWithMarkdown(message);
+    }
+
+
 }

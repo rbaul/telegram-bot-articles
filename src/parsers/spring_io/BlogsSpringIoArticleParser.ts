@@ -1,13 +1,12 @@
 import {Article, ArticleType, ParserType, SiteType} from '../../domain/model/Article';
-import cheerio from "cheerio";
 import {ArticleParser} from '../ArticleParser';
-import {axiosInstance} from '../../services/ArticleManager';
-import {retry} from 'ts-retry-promise';
 
-const url = 'https://spring.io/blog?page='; // URL we're scraping
+const url = 'https://spring.io/blog'; // URL we're scraping
 const numberOfPages = 10;
 
 export class BlogsSpringIoArticleParser extends ArticleParser {
+
+    private readonly selector = '.blog--title > a';
 
     getType(): ParserType {
         return ParserType.SPRING_IO_BLOGS;
@@ -33,30 +32,23 @@ export class BlogsSpringIoArticleParser extends ArticleParser {
         return url;
     }
 
-    readArticlePage(pageNumber: number): Promise<void | Article[]> {
-        // Send an async HTTP Get request to the url
-        const fullUrl: string = `${url}${pageNumber}`;
+    public getFullUrl(pageNumber: number): string {
+        return (pageNumber || pageNumber > 1) ? `${this.getUrl()}?page=${pageNumber}` : this.getUrl();
+    }
 
-        return retry(() => axiosInstance.get(fullUrl)
-            .then( // Once we have data returned ...
-                response => {
-                    const html = response.data; // Get the HTML from the HTTP request
-                    // console.log(html);
-                    const $ = cheerio.load(html); // Load the HTML string into cheerio
-                    const contents: Cheerio = $('.blog--title > a');
+    public getElementSelector(): string {
+        return this.selector;
+    }
 
-                    const articlesFromPage: Article[] = [];
-                    contents.each((index, element) => {
-                        const attribs = element.attribs;
-                        const articleUrl = `https://spring.io${attribs.href}`;
-                        const title = element.children[0].data;
-                        articlesFromPage.push(this.createArticle(title, articleUrl));
-                    });
-                    return articlesFromPage;
-                    // console.log(`Finish read page: ${fullUrl}`)
-                }
-            )
-        ).catch(error => this.handleError(fullUrl, error));// Error handling
+    public getArticlesFromPage(contents: Cheerio): Article[] {
+        const articlesFromPage: Article[] = [];
+        contents.each((index, element) => {
+            const attribs = element.attribs;
+            const articleUrl = `https://spring.io${attribs.href}`;
+            const title = element.children[0].data;
+            articlesFromPage.push(this.createArticle(title, articleUrl));
+        });
+        return articlesFromPage;
     }
 
 }

@@ -2,6 +2,7 @@ import {Telegraf} from 'telegraf';
 import emoji from 'node-emoji-new';
 import {Article} from '../domain/model/Article';
 import {retry} from 'ts-retry-promise';
+import {TelegramBotCommandListener} from './TelegramBotCommandListener';
 
 /**
  * Telegram Bot publisher
@@ -17,8 +18,34 @@ export class TelegramBotPublisher {
     private successTagEmoji: string = emoji.get('green_circle');
     private errorTagEmoji: string = emoji.get('red_circle');
 
+    private commandListener: TelegramBotCommandListener;
+
     private constructor() {
         this.bot = new Telegraf(process.env.BOT_TOKEN);
+
+        this.bot.command('status', ctx => {
+            if (this.commandListener) {
+                return this.commandListener.commandStatus(ctx);
+            }
+        });
+
+        this.bot.command('init', ctx => {
+            if (this.commandListener) {
+                return this.commandListener.commandInit(ctx);
+            }
+        });
+
+        this.bot.command('delete', ctx => {
+            if (this.commandListener) {
+                return this.commandListener.commandDelete(ctx);
+            }
+        });
+
+        this.bot.command('sync', ctx => {
+            if (this.commandListener) {
+                return this.commandListener.commandSync(ctx);
+            }
+        });
     }
 
     public static getInstance(): TelegramBotPublisher {
@@ -26,6 +53,10 @@ export class TelegramBotPublisher {
             TelegramBotPublisher.instance = new TelegramBotPublisher();
         }
         return TelegramBotPublisher.instance;
+    }
+
+    public setCommandListener(commandListener: TelegramBotCommandListener): void {
+        this.commandListener = commandListener;
     }
 
     public sendMessage(channelId: string, message: string): Promise<any> {
@@ -75,8 +106,7 @@ export class TelegramBotPublisher {
         retry(() => this.sendMessage(process.env.ACTIVITY_LOG_APP_CHANNEL_ID,
             `${statusEmoji} [${process.env.APP_NAME}]\n\n${message}`))
             .catch(error => {
-                console.error(`Failed send activity log message '${message}' to Activity Log channel, error: ${error.message}`);
                 throw error;
-            }); // Error handling
+            }).catch(error => console.error(`Failed send activity log message '${message}' to Activity Log channel, error: ${error.message}`)); // Error handling
     }
 }

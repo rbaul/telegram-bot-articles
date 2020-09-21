@@ -1,5 +1,8 @@
 import {Article, ArticleType, ParserType, SiteType} from '../domain/model/Article';
 import {TelegramBotPublisher} from '../services/TelegramBotPublisher';
+import {retry} from 'ts-retry-promise';
+import {axiosInstance} from '../services/ArticleManager';
+import cheerio from "cheerio";
 
 const numberOfPagesForUpdate = 2;
 
@@ -8,6 +11,14 @@ export abstract class ArticleParser {
     abstract getType(): ParserType;
 
     abstract getUrl(): string;
+
+    public getFullUrl(pageNumber: number): string {
+        return (pageNumber && pageNumber > 1) ? `${this.getUrl()}/page/${pageNumber}` : this.getUrl();
+    }
+
+    public abstract getElementSelector(): string;
+
+    public abstract getArticlesFromPage(contents: Cheerio): Article[];
 
     abstract getNumberOfPages(): number;
 
@@ -33,15 +44,13 @@ export abstract class ArticleParser {
         };
     }
 
-    init(): Promise<void | Article[]>[] {
+    getAll(): Promise<void | Article[]>[] {
         return this.readArticles(this.getNumberOfPages());
     }
 
-    updateArticles(): Promise<void | Article[]>[] {
+    getLatest(): Promise<void | Article[]>[] {
         return this.readArticles(this.getNumberOfPagesForUpdate());
-    };
-
-    abstract readArticlePage(pageNumber?: number): Promise<void | Article[]>;
+    }
 
     readArticles(numberOfPages: number): Promise<void | Article[]>[] {
         const pagePromises: Promise<void | Article[]>[] = [];
@@ -49,6 +58,34 @@ export abstract class ArticleParser {
             pagePromises.push(this.readArticlePage(i));
         }
         return pagePromises;
+    }
+
+    readArticlePage(pageNumber?: number): Promise<void | Article[]> {
+        // Send an async HTTP Get request to the url
+        const fullUrl: string = this.getFullUrl(pageNumber);
+
+        return retry(() => axiosInstance.get(fullUrl)
+            .then(response => {
+                if (!response.request._redirectable._currentUrl.includes(response.config.url)) {
+                    throw new Error(`Redirect to '${response.request._redirectable._currentUrl}'`);
+                }
+                return response;
+            })
+            .then(response => {
+                const html = response.data; // Get the HTML from the HTTP request
+                // console.log(html);
+                const $ = cheerio.load(html); // Load the HTML string into cheerio
+                return $(this.getElementSelector());
+            })
+            .then( // Once we have data returned ...
+                contents => this.getArticlesFromPage(contents)
+            ).then(articles => {
+                if (articles.length === 0) {
+                    throw new Error(`No articles found on this page`);
+                }
+                return articles;
+            })
+        ).catch(error => this.handleError(fullUrl, error));// Error handling
     }
 
     createArticle(title: string, articleUrl: string): Article {
