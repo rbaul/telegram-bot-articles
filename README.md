@@ -6,6 +6,10 @@ Site references
 * [Baeldung](https://www.baeldung.com/)
 * [Reflectoring](https://reflectoring.io/)
 * [SpringFramework Guru](https://springframework.guru/)
+* [Java code geeks](https://www.javacodegeeks.com)
+* [Better java code](https://betterjavacode.com)
+* [Thorben-Janssen](https://thorben-janssen.com)
+* [Vladmihalcea](https://vladmihalcea.com)
 
 
 ## Requirements environment variables

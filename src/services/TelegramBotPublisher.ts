@@ -24,6 +24,7 @@ export class TelegramBotPublisher {
         this.bot = new Telegraf(process.env.BOT_TOKEN);
 
         this.bot.command('status', ctx => {
+            console.log('Status command received...')
             if (this.commandListener) {
                 return this.commandListener.commandStatus(ctx);
             }
@@ -46,6 +47,7 @@ export class TelegramBotPublisher {
                 return this.commandListener.commandSync(ctx);
             }
         });
+        this.bot.startPolling();
     }
 
     public static getInstance(): TelegramBotPublisher {
