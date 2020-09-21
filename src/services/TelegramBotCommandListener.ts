@@ -7,4 +7,6 @@ export interface TelegramBotCommandListener {
     commandDelete(ctx: any): any;
 
     commandSync(ctx: any): any;
+
+    commandPublish(ctx: any): any;
 }

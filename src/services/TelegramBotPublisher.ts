@@ -46,6 +46,12 @@ export class TelegramBotPublisher {
                 return this.commandListener.commandSync(ctx);
             }
         });
+
+        this.bot.command('publish', ctx => {
+            if (this.commandListener) {
+                return this.commandListener.commandPublish(ctx);
+            }
+        });
         this.bot.startPolling();
     }
 

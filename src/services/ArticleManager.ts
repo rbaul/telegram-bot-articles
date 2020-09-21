@@ -267,5 +267,9 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         return ctx.replyWithMarkdown(message);
     }
 
+    commandPublish(ctx: any): any {
+        this.publishRandomArchiveArticles();
+        return ctx.reply('Publish random archive articles started...');
+    }
 
 }
