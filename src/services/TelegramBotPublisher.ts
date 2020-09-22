@@ -52,6 +52,12 @@ export class TelegramBotPublisher {
                 return this.commandListener.commandPublish(ctx);
             }
         });
+
+        this.bot.command('save', ctx => {
+            if (this.commandListener) {
+                return this.commandListener.commandSave(ctx);
+            }
+        });
         this.bot.startPolling();
     }
 
@@ -74,7 +80,7 @@ export class TelegramBotPublisher {
         // }); // Error handling
     }
 
-    public sendArticleToJavaChannel(article: Article, isNewArticle?: boolean): Promise<any | void> {
+    public sendArticleToJavaChannel(article: Article, isNewArticle?: boolean): Promise<any | Article> {
         return this.sendArticleToChannel(process.env.JAVA_CHANNEL_ID, article, isNewArticle)
             .catch(error => {
                 const errorMessage = `Failed send article message '${JSON.stringify(article)}' to Java channel, error: ${error.message}`;
@@ -84,7 +90,7 @@ export class TelegramBotPublisher {
             }); // Error handling
     }
 
-    public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): Promise<any | void> {
+    public sendArticleToSpringChannel(article: Article, isNewArticle?: boolean): Promise<any | Article> {
         return this.sendArticleToChannel(process.env.SPRING_CHANNEL_ID, article, isNewArticle)
             .catch(error => {
                 const errorMessage: string = `Failed send article message '${JSON.stringify(article)}' to Spring channel, error: ${error.message}`;
@@ -94,11 +100,12 @@ export class TelegramBotPublisher {
             }); // Error handling
     }
 
-    public sendArticleToChannel(channelId: string, article: Article, isNewArticle?: boolean): Promise<any | void> {
+    public sendArticleToChannel(channelId: string, article: Article, isNewArticle?: boolean): Promise<any | Article> {
         console.log(`Publish ${JSON.stringify(article)}`);
         const tagEmoji: string = isNewArticle ? this.newTagEmoji : this.oldTagEmoji;
         const message: string = `${tagEmoji} ${article.title} \n\n ${article.url}`;
-        return retry(() => this.sendMessage(channelId, message));
+        return retry(() => this.sendMessage(channelId, message))
+            .then(() => article);
         // return this.sendMessage(channelId, message);
     }
 

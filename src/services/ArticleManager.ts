@@ -20,6 +20,8 @@ import {ThorbenJanssenArticleParser} from '../parsers/ThorbenJanssenArticleParse
 import {VladMihalceaArticleParser} from '../parsers/VladMihalceaArticleParser';
 import {JavaCodeGeeksArticleParser} from '../parsers/JavaCodeGeeksArticleParser';
 import {TelegramBotCommandListener} from './TelegramBotCommandListener';
+import {SpringVinsGuruArticleParser} from '../parsers/vinsguru/SpringVinsGuruArticleParser';
+import {SpringRieckpilArticleParser} from '../parsers/rieckpil/SpringRieckpilArticleParser';
 
 export const axiosInstance: AxiosInstance = axios.create(); // Create a new Axios Instance
 
@@ -52,7 +54,9 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
             new BetterJavaCodeArticleParser(),
             new ThorbenJanssenArticleParser(),
             new VladMihalceaArticleParser(),
-            new JavaCodeGeeksArticleParser()
+            new JavaCodeGeeksArticleParser(),
+            new SpringVinsGuruArticleParser(),
+            new SpringRieckpilArticleParser()
         ];
     }
 
@@ -219,6 +223,7 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
                     TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
                 }
             }
+
         }
     }
 
@@ -227,8 +232,7 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
      */
     private publishSuccess(article: Article) {
         article.published = true;
-        // Update json backup file
-        Utils.objectToFile(process.env.ARTICLES_DB_JSON_PATH, this.repository.findAll());
+        this.saveAllToFile();
         ArticleManager.incrementArticlePublished(ArticleType.SPRING);
     }
 
@@ -272,4 +276,13 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         return ctx.reply('Publish random archive articles started...');
     }
 
+    commandSave(ctx: any): any {
+        this.saveAllToFile();
+        return ctx.reply('Saved all data to json file');
+    }
+
+    private saveAllToFile() {
+        // Update json backup file
+        Utils.objectToFile(process.env.ARTICLES_DB_JSON_PATH, this.repository.findAll());
+    }
 }

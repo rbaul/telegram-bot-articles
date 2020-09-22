@@ -8,10 +8,14 @@ export class Utils {
     }
 
     public static objectToFile(path: string, content: any): void {
-        fs.writeFile(path, JSON.stringify(content), () => {
-            console.log('Success update backup file...');
-        });
-        // fs.writeFileSync(path, JSON.stringify(content));
+        // let random = Math.random().toString(36).substring(7);
+        // console.log(`>>>> Start save to file... ${random}`);
+        // fs.writeFile(path, JSON.stringify(content), () => {
+        //     console.log('Success update backup file...');
+        //     console.log(`>>>> End save to file...${random}`);
+        // });
+        fs.writeFileSync(path, JSON.stringify(content));
+        // console.log(`>>>> End save to file...${random}`);
     }
 
     public static fileToObject(path: string): any {

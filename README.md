@@ -10,6 +10,8 @@ Site references
 * [Better java code](https://betterjavacode.com)
 * [Thorben-Janssen](https://thorben-janssen.com)
 * [Vladmihalcea](https://vladmihalcea.com)
+* [VinsGuru](https://www.vinsguru.com)
+* [Rieckpil](https://rieckpil.de/)
 
 
 ## Requirements environment variables

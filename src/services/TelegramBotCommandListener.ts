@@ -9,4 +9,6 @@ export interface TelegramBotCommandListener {
     commandSync(ctx: any): any;
 
     commandPublish(ctx: any): any;
+
+    commandSave(ctx: any): any;
 }
