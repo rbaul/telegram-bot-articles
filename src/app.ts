@@ -75,13 +75,13 @@ app.listen(port, () => {
 
     process.on('SIGTERM', () => {
         console.log('SIGTERM received, cleaning up...');
-        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('SIGTERM received... Application shutdown...');
+        // TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('SIGTERM received... Application shutdown...');
         process.exit(0);
     });
 
     process.on('SIGINT', () => {
         console.log('Received SIGINT. Press Control-D to exit.');
-        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Received SIGINT..  Application shutdown...');
+        // TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Received SIGINT..  Application shutdown...');
         process.exit(0);
     });
 

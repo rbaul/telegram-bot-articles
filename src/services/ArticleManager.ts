@@ -269,8 +269,8 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         const articles = this.repository.findAll();
         const articlesParserCount = Utils.mapToString(Utils.getMapParserTypeCounts(articles));
         const articlesTypeCount = Utils.mapToString(Utils.getMapArticleTypeCounts(articles));
-        const message = `*Articles status*: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
-        return ctx.replyWithMarkdown(message);
+        const message = `Articles status: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;
+        return ctx.reply(message);
     }
 
     commandPublish(ctx: any): any {
