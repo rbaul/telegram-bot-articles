@@ -25,4 +25,6 @@ export interface Repository<T> {
     getMapTypeCounts(): Map<SiteType, number>;
 
     deleteByParserTypeIn(parserTypes: ParserType[]): void;
+
+    saveToJsonFile(): void;
 }

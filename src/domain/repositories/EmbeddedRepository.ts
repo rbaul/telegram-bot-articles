@@ -49,9 +49,13 @@ export class EmbeddedRepository implements Repository<Article> {
         const savedArticles = articles.filter(article => !this.isExistByUrl(article.url))
             .map(article => this.save(article));
         if (savedArticles && savedArticles.length > 0) { // Update DB json file for backup
-            Utils.objectToFile(articleDbJsonPath, this.findAll());
+            this.saveToJsonFile();
         }
         return savedArticles;
+    }
+
+    saveToJsonFile() {
+        Utils.objectToFile(articleDbJsonPath, this.findAll());
     }
 
     findBySite(site: SiteType): Article[] {
@@ -74,8 +78,11 @@ export class EmbeddedRepository implements Repository<Article> {
     }
 
     deleteByParserTypeIn(parserTypes: ParserType[]): void {
-        this.findByParserIn(parserTypes)
-            .forEach(article => this.deleteByUrl(article.url));
+        const articles: Article[] = this.findByParserIn(parserTypes);
+        articles.forEach(article => this.deleteByUrl(article.url));
+        if (articles && articles.length > 0) {
+            this.saveToJsonFile();
+        }
     }
 
     isExistByUrl(url: string): boolean {

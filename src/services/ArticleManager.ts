@@ -120,6 +120,8 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         const deleteArticleParserTypes: ParserType[] = parserTypesPersisted
             .filter(parserName => !parserTypes.includes(parserName));
         if (deleteArticleParserTypes.length > 0) {
+            console.log(`Articles without parser: [${deleteArticleParserTypes}], starting delete...`)
+            TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(`Delete articles by parser: ${deleteArticleParserTypes}`)
             this.repository.deleteByParserTypeIn(deleteArticleParserTypes);
         }
     }
@@ -232,7 +234,7 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
      */
     private publishSuccess(article: Article) {
         article.published = true;
-        this.saveAllToFile();
+        this.repository.saveToJsonFile();
         ArticleManager.incrementArticlePublished(ArticleType.SPRING);
     }
 
@@ -277,12 +279,8 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
     }
 
     commandSave(ctx: any): any {
-        this.saveAllToFile();
+        this.repository.saveToJsonFile();
         return ctx.reply('Saved all data to json file');
     }
 
-    private saveAllToFile() {
-        // Update json backup file
-        Utils.objectToFile(process.env.ARTICLES_DB_JSON_PATH, this.repository.findAll());
-    }
 }
