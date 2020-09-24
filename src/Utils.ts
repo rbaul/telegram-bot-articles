@@ -88,4 +88,11 @@ export class Utils {
         }
         return Array.from(mapParserTypeCounts.keys());
     }
+
+    /**
+     * Get random from array
+     */
+    public static getRandomFromArray<T>(array: T[]): T {
+        return array[Math.floor(Math.random() * array.length)];
+    }
 }

@@ -208,7 +208,7 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
                 // Random Archive publish
                 let articles: Article[] = this.repository.findAll()
                     .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.SPRING));
-                let article = articles[Math.floor(Math.random() * articles.length)];
+                const article: Article = Utils.getRandomFromArray(articles);
                 TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
                 if (article.types.includes(ArticleType.JAVA)) {
                     TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
@@ -219,7 +219,7 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
                 // Random Archive publish
                 let articles: Article[] = this.repository.findAll()
                     .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.JAVA));
-                let article = articles[Math.floor(Math.random() * articles.length)];
+                const article: Article = Utils.getRandomFromArray(articles);
                 TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
                 if (article.types.includes(ArticleType.SPRING)) {
                     TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
@@ -235,7 +235,7 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
     private publishSuccess(article: Article) {
         article.published = true;
         this.repository.saveToJsonFile();
-        ArticleManager.incrementArticlePublished(ArticleType.SPRING);
+        article.types.forEach(articleType => ArticleManager.incrementArticlePublished(articleType));
     }
 
     commandDelete(ctx: any): any {
