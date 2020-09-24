@@ -201,29 +201,43 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
      * Publish archive articles
      */
     public publishRandomArchiveArticles(): void {
-        TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Publish archive articles');
         if (ArticleManager.INIT_FINISH) {
-
+            TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Publish archive articles');
             if (ArticleManager.isCanPublishToday(ArticleType.SPRING)) {
-                // Random Archive publish
-                let articles: Article[] = this.repository.findAll()
-                    .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.SPRING));
-                const article: Article = Utils.getRandomFromArray(articles);
-                TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
-                if (article.types.includes(ArticleType.JAVA)) {
-                    TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
-                }
+                this.publishRandomSpringArticle();
             }
 
             if (ArticleManager.isCanPublishToday(ArticleType.JAVA)) {
-                // Random Archive publish
-                let articles: Article[] = this.repository.findAll()
-                    .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.JAVA));
-                const article: Article = Utils.getRandomFromArray(articles);
+                this.publishRandomJavaArticle();
+            }
+        }
+    }
+
+    private publishRandomSpringArticle() {
+        if (ArticleManager.INIT_FINISH) {
+
+            // Random Archive publish
+            let articles: Article[] = this.repository.findAll()
+                .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.SPRING));
+            const article: Article = Utils.getRandomFromArray(articles);
+            TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
+            if (article.types.includes(ArticleType.JAVA)) {
                 TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
-                if (article.types.includes(ArticleType.SPRING)) {
-                    TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
-                }
+            }
+
+        }
+    }
+
+    private publishRandomJavaArticle() {
+        if (ArticleManager.INIT_FINISH) {
+
+            // Random Archive publish
+            let articles: Article[] = this.repository.findAll()
+                .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.JAVA));
+            const article: Article = Utils.getRandomFromArray(articles);
+            TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
+            if (article.types.includes(ArticleType.SPRING)) {
+                TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
             }
 
         }
@@ -273,9 +287,14 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         return ctx.reply(message);
     }
 
-    commandPublish(ctx: any): any {
-        this.publishRandomArchiveArticles();
-        return ctx.reply('Publish random archive articles started...');
+    commandPublishSpring(ctx: any): any {
+        this.publishRandomSpringArticle();
+        return ctx.reply('Publish random archive SPRING articles started...');
+    }
+
+    commandPublishJava(ctx: any): any {
+        this.publishRandomJavaArticle();
+        return ctx.reply('Publish random archive JAVA articles started...');
     }
 
     commandSave(ctx: any): any {

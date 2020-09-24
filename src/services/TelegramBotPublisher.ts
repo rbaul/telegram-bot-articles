@@ -47,9 +47,15 @@ export class TelegramBotPublisher {
             }
         });
 
-        this.bot.command('publish', ctx => {
+        this.bot.command('publish_spring', ctx => {
             if (this.commandListener) {
-                return this.commandListener.commandPublish(ctx);
+                return this.commandListener.commandPublishSpring(ctx);
+            }
+        });
+
+        this.bot.command('publish_java', ctx => {
+            if (this.commandListener) {
+                return this.commandListener.commandPublishJava(ctx);
             }
         });
 
