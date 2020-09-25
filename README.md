@@ -12,6 +12,7 @@ Site references
 * [Vladmihalcea](https://vladmihalcea.com)
 * [VinsGuru](https://www.vinsguru.com)
 * [Rieckpil](https://rieckpil.de/)
+* [PIOTR'S TECHBLOG](https://piotrminkowski.com/)
 
 
 ## Requirements environment variables
