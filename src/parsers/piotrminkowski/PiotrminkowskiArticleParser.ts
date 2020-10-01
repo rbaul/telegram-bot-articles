@@ -33,7 +33,7 @@ export class PiotrminkowskiArticleParser extends ArticleParser {
         contents.each((index, element) => {
             const attribs = element.attribs;
             const articleUrl = attribs.href;
-            const title = attribs.title;
+            const title = element.children[0].data;
             articlesFromPage.push(this.createArticle(title, articleUrl));
         });
         return articlesFromPage;
