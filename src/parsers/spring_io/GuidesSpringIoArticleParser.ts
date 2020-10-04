@@ -23,10 +23,6 @@ export class GuidesSpringIoArticleParser extends ArticleParser {
         return SiteType.SpringIO;
     }
 
-    isNeedPublish(): boolean {
-        return false;
-    }
-
     getUrl(): string {
         return url;
     }

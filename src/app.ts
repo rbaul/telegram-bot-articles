@@ -1,7 +1,7 @@
 import express from 'express';
 import {RecurrenceRule, RecurrenceSegment, scheduleJob} from 'node-schedule';
 import dotenv from 'dotenv';
-import {Article} from './domain/model/Article';
+import {Article, ParserType} from './domain/model/Article';
 import {ArticleManager, axiosInstance} from './services/ArticleManager';
 import {defaultRetryConfig} from 'ts-retry-promise';
 import {TelegramBotPublisher} from './services/TelegramBotPublisher';
@@ -10,11 +10,12 @@ import {TelegramBotPublisher} from './services/TelegramBotPublisher';
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 export const articleDbJsonPath = process.env.ARTICLES_DB_JSON_PATH;
 const timeZone: string = process.env.TIME_ZONE;
 const archiveScheduler: RecurrenceSegment = process.env.ARCHIVE_SCHEDULER_HOURS ? JSON.parse(process.env.ARCHIVE_SCHEDULER_HOURS) as RecurrenceSegment : null;
 const syncScheduler: RecurrenceSegment = process.env.SYNC_SCHEDULER_HOURS ? JSON.parse(process.env.SYNC_SCHEDULER_HOURS) as RecurrenceSegment : null;
+export const EXCLUDE_PARSER_TYPE_PUBLISH: ParserType[] = process.env.EXCLUDE_TYPE_PUBLISH ? JSON.parse(process.env.EXCLUDE_TYPE_PUBLISH) as ParserType[] : [];
 
 // Default Retry configuration
 defaultRetryConfig.retries = 3;

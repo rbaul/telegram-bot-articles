@@ -10,7 +10,7 @@ import {EmbeddedRepository} from '../domain/repositories/EmbeddedRepository';
 import {ArticleListener} from '../domain/repositories/ArticleListener';
 import {Utils} from '../Utils';
 import {JavaWeeklyBaeldungArticleParser} from '../parsers/baeldung/JavaWeeklyBaeldungArticleParser';
-import {articleDbJsonPath} from '../app';
+import {articleDbJsonPath, EXCLUDE_PARSER_TYPE_PUBLISH} from '../app';
 import {JavaReflectoringIoArticleParser} from '../parsers/reflectoring_io/JavaReflectoringIoArticleParser';
 import {SpringReflectoringIoArticleParser} from '../parsers/reflectoring_io/SpringReflectoringIoArticleParser';
 import {JavaCategoryBaeldungArticleParser} from '../parsers/baeldung/JavaCategoryBaeldungArticleParser';
@@ -220,7 +220,8 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
 
             // Random Archive publish
             let articles: Article[] = this.repository.findAll()
-                .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.SPRING));
+                .filter(value => !value.published && value.types.includes(ArticleType.SPRING)
+                    && !EXCLUDE_PARSER_TYPE_PUBLISH.includes(value.parser));
             const article: Article = Utils.getRandomFromArray(articles);
             TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
             if (article.types.includes(ArticleType.JAVA)) {
@@ -235,7 +236,8 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
 
             // Random Archive publish
             let articles: Article[] = this.repository.findAll()
-                .filter(value => value.needPublish && !value.published && value.types.includes(ArticleType.JAVA));
+                .filter(value => !value.published && value.types.includes(ArticleType.JAVA)
+                    && !EXCLUDE_PARSER_TYPE_PUBLISH.includes(value.parser));
             const article: Article = Utils.getRandomFromArray(articles);
             TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
             if (article.types.includes(ArticleType.SPRING)) {
