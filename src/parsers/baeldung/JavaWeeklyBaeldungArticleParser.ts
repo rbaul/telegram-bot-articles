@@ -5,7 +5,7 @@ const url = 'https://www.baeldung.com';
 
 export class JavaWeeklyBaeldungArticleParser extends ArticleParser {
 
-    private readonly selector = '.thrv_wrapper > p > .tve-froala';
+    private readonly selector = '.elementor-text-editor > p > a';
 
     getType(): ParserType {
         return ParserType.JAVA_WEEKLY_BAELDUNG;
@@ -47,9 +47,9 @@ export class JavaWeeklyBaeldungArticleParser extends ArticleParser {
         const articlesFromPage: Article[] = [];
         contents.each((index, element) => {
             const attribs = element.attribs;
-            const articleUrl = `${url}${attribs.href}`;
             if (attribs.href.includes('/java-weekly')) {
-                const title = element.children[0].data;
+                const articleUrl = `${url}${attribs.href}`;
+                const title = attribs.title;
                 articlesFromPage.push(this.createArticle(title, articleUrl));
             }
         });
