@@ -49,7 +49,7 @@ export class JavaWeeklyBaeldungArticleParser extends ArticleParser {
             const attribs = element.attribs;
             if (attribs.href.includes('/java-weekly')) {
                 const articleUrl = `${url}${attribs.href}`;
-                const title = attribs.title;
+                const title = element.children[0].data;
                 articlesFromPage.push(this.createArticle(title, articleUrl));
             }
         });
