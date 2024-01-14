@@ -6,7 +6,7 @@ const numberOfPages = 10;
 
 export class BlogsSpringIoArticleParser extends ArticleParser {
 
-    private readonly selector = '.blog-post > h1 > a';
+    private readonly selector = 'article > h1 > a';
 
     getType(): ParserType {
         return ParserType.SPRING_IO_BLOGS;

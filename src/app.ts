@@ -89,6 +89,10 @@ app.listen(port, () => {
     });
 
     articleManager.init();
+    setTimeout(() => {
+        console.log(`Update all articles from all sources and publish all new...`);
+        articleManager.sync();
+    }, 120000);
     return console.log(`server is listening on ${port}`);
 })
 
