@@ -6,7 +6,7 @@ const numberOfPages = 26;
 
 export class ThorbenJanssenArticleParser extends ArticleParser {
 
-    private readonly selector = '.thrv_wrapper > h2 > a';
+    private readonly selector = '.entry-title > a';
 
     getType(): ParserType {
         return ParserType.THORBEN_JANSSEN;
@@ -37,7 +37,7 @@ export class ThorbenJanssenArticleParser extends ArticleParser {
         contents.each((index, element) => {
             const attribs = element.attribs;
             const articleUrl = attribs.href;
-            const title = element.children[0].children[0].children[0].data;
+            const title = element.children[0].data;
             articlesFromPage.push(this.createArticle(title, articleUrl));
         });
 

@@ -4,7 +4,7 @@ import {retry} from 'ts-retry-promise';
 import {axiosInstance} from '../services/ArticleManager';
 import cheerio from "cheerio";
 
-const numberOfPagesForUpdate = 2;
+const numberOfPagesForUpdate = 1;
 
 export abstract class ArticleParser {
 

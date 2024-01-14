@@ -49,7 +49,7 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
             new SpringCategoryBaeldungArticleParser(),
             new JavaReflectoringIoArticleParser(),
             new SpringReflectoringIoArticleParser(),
-            new BlogsSpringIoArticleParser(),
+            // new BlogsSpringIoArticleParser(), // Not Supported
             new SpringFrameworkGuruArticleParser(),
             new GuidesSpringIoArticleParser(),
             new BetterJavaCodeArticleParser(),
@@ -223,9 +223,11 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
                 .filter(value => !value.published && value.types.includes(ArticleType.SPRING)
                     && !EXCLUDE_PARSER_TYPE_PUBLISH.includes(value.parser));
             const article: Article = Utils.getRandomFromArray(articles);
-            TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
-            if (article.types.includes(ArticleType.JAVA)) {
-                TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
+            if (article) {
+              TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
+              if (article.types.includes(ArticleType.JAVA)) {
+                  TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
+              }
             }
 
         }
@@ -239,9 +241,11 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
                 .filter(value => !value.published && value.types.includes(ArticleType.JAVA)
                     && !EXCLUDE_PARSER_TYPE_PUBLISH.includes(value.parser));
             const article: Article = Utils.getRandomFromArray(articles);
-            TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
-            if (article.types.includes(ArticleType.SPRING)) {
-                TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
+            if (article) {
+              TelegramBotPublisher.getInstance().sendArticleToJavaChannel(article).then(() => this.publishSuccess(article));
+              if (article.types.includes(ArticleType.SPRING)) {
+                  TelegramBotPublisher.getInstance().sendArticleToSpringChannel(article).then(() => this.publishSuccess(article));
+              }
             }
 
         }

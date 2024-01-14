@@ -6,7 +6,7 @@ const numberOfPages = 10;
 
 export class BlogsSpringIoArticleParser extends ArticleParser {
 
-    private readonly selector = '.blog--title > a';
+    private readonly selector = '.blog-post > h1 > a';
 
     getType(): ParserType {
         return ParserType.SPRING_IO_BLOGS;
@@ -33,7 +33,7 @@ export class BlogsSpringIoArticleParser extends ArticleParser {
     }
 
     public getFullUrl(pageNumber: number): string {
-        return (pageNumber || pageNumber > 1) ? `${this.getUrl()}?page=${pageNumber}` : this.getUrl();
+        return (pageNumber && pageNumber > 1) ? `${this.getUrl()}/page-${pageNumber}` : this.getUrl();
     }
 
     public getElementSelector(): string {

@@ -1,7 +1,7 @@
 import {ArticleType, ParserType} from '../../domain/model/Article';
 import {CategoryBaeldungArticleParser} from './CategoryBaeldungArticleParser';
 
-const numberOfPages = 41;
+const numberOfPages = 1;
 
 export class SpringCategoryBaeldungArticleParser extends CategoryBaeldungArticleParser {
 

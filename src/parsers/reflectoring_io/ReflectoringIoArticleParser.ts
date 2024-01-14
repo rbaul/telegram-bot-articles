@@ -3,7 +3,7 @@ import {ArticleParser} from '../ArticleParser';
 
 export abstract class ReflectoringIoArticleParser extends ArticleParser {
 
-    private readonly selector = '.post-title > a';
+    private readonly selector = '.title-linked';
 
     abstract getCategory(): string;
 

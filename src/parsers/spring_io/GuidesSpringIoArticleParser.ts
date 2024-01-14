@@ -5,7 +5,7 @@ const url = 'https://spring.io/guides'; // URL we're scraping
 
 export class GuidesSpringIoArticleParser extends ArticleParser {
 
-    private readonly selector = '.guide-link';
+    private readonly selector = 'article > a';
 
     getType(): ParserType {
         return ParserType.SPRING_IO_GUIDES;

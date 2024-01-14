@@ -3,7 +3,7 @@ import {ArticleParser} from '../ArticleParser';
 
 export abstract class RieckpilArticleParser extends ArticleParser {
 
-    private readonly selector = '.entry-title > a';
+    private readonly selector = 'article .thrive-shortcode-content > a';
 
     abstract getCategory(): string;
 

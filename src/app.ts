@@ -9,6 +9,8 @@ import {TelegramBotPublisher} from './services/TelegramBotPublisher';
 // Read all environment variables
 dotenv.config();
 
+// const axios = require('axios');
+// const got = require("got");
 const app = express();
 const port = process.env.PORT || 3000;
 export const articleDbJsonPath = process.env.ARTICLES_DB_JSON_PATH;
@@ -90,13 +92,24 @@ app.listen(port, () => {
     return console.log(`server is listening on ${port}`);
 })
 
-setInterval(() => {
-    const keepAliveUrl: string = process.env.KEEP_ALIVE_URL;
-    if (keepAliveUrl) {
-        axiosInstance.get(keepAliveUrl)
-            .catch(error => `Failed execute Keep Alive: ${error.message}`);
-    }
-}, Number(process.env.KEEP_ALIVE_INTERVAL_S) * 1000);
+// Self Keep alive
+// setInterval(() => {
+//     const keepAliveUrl: string = process.env.KEEP_ALIVE_URL;
+//   console.log(`Keep Alive Url: ${keepAliveUrl}`);
+//     if (keepAliveUrl) {
+//         // axiosInstance.get(keepAliveUrl)
+//         //     .catch(error => `Failed execute Keep Alive: ${error.message}`);
+//       // got.get(keepAliveUrl)
+//       //   .then(function (response) {
+//       //     // handle success
+//       //     console.log(response);
+//       //   })
+//       //   .catch(function (error) {
+//       //     // handle error
+//       //     console.log(error);
+//       //   });
+//     }
+// }, Number(process.env.KEEP_ALIVE_INTERVAL_S) * 1000);
 
 
 
