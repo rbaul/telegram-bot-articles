@@ -1,3 +1,4 @@
+import { SecurityAdvisoriesSpringIoArticleParser } from './../parsers/spring_io/SecurityAdvisoriesSpringIoArticleParser';
 import {ArticleParser} from '../parsers/ArticleParser';
 import {SpringCategoryBaeldungArticleParser} from '../parsers/baeldung/SpringCategoryBaeldungArticleParser';
 import {BlogsSpringIoArticleParser} from '../parsers/spring_io/BlogsSpringIoArticleParser';
@@ -49,9 +50,10 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
             new SpringCategoryBaeldungArticleParser(),
             new JavaReflectoringIoArticleParser(),
             new SpringReflectoringIoArticleParser(),
-            // new BlogsSpringIoArticleParser(), // Not Supported
+            new BlogsSpringIoArticleParser(), 
+            new SecurityAdvisoriesSpringIoArticleParser(),
             new SpringFrameworkGuruArticleParser(),
-            new GuidesSpringIoArticleParser(),
+            // new GuidesSpringIoArticleParser(), // Not Supported
             new BetterJavaCodeArticleParser(),
             new ThorbenJanssenArticleParser(),
             new VladMihalceaArticleParser(),
