@@ -24,6 +24,7 @@ import {TelegramBotCommandListener} from './TelegramBotCommandListener';
 import {SpringVinsGuruArticleParser} from '../parsers/vinsguru/SpringVinsGuruArticleParser';
 import {SpringRieckpilArticleParser} from '../parsers/rieckpil/SpringRieckpilArticleParser';
 import {PiotrminkowskiArticleParser} from '../parsers/piotrminkowski/PiotrminkowskiArticleParser';
+import { DanVegaDevArticleParser } from '../parsers/DanVegaDevArticleParser';
 
 export const axiosInstance: AxiosInstance = axios.create({
     headers: {
@@ -64,7 +65,8 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
             new JavaCodeGeeksArticleParser(),
             new SpringVinsGuruArticleParser(),
             new SpringRieckpilArticleParser(),
-            new PiotrminkowskiArticleParser()
+            new PiotrminkowskiArticleParser(),
+            new DanVegaDevArticleParser()
         ];
     }
 
