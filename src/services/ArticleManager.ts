@@ -25,7 +25,11 @@ import {SpringVinsGuruArticleParser} from '../parsers/vinsguru/SpringVinsGuruArt
 import {SpringRieckpilArticleParser} from '../parsers/rieckpil/SpringRieckpilArticleParser';
 import {PiotrminkowskiArticleParser} from '../parsers/piotrminkowski/PiotrminkowskiArticleParser';
 
-export const axiosInstance: AxiosInstance = axios.create(); // Create a new Axios Instance
+export const axiosInstance: AxiosInstance = axios.create({
+    headers: {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/68.0.2704.79'
+    }
+}); // Create a new Axios Instance
 
 export const dailyMaxNumberOfArticles: number = Number(process.env.DAILY_ARTICLES);
 
