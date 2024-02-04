@@ -5,7 +5,7 @@ const url = 'https://www.baeldung.com';
 
 export class JavaWeeklyBaeldungArticleParser extends ArticleParser {
 
-    private readonly selector = '.elementor-text-editor > p > a';
+    private readonly selector = '.elementor-widget-container > p > a';
 
     getType(): ParserType {
         return ParserType.JAVA_WEEKLY_BAELDUNG;
