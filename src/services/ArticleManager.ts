@@ -73,15 +73,16 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
     /**
      * Initialization
      */
-    public init() {
+    public async init() {
         TelegramBotPublisher.getInstance().setCommandListener(this);
 
         if (Utils.isFileExist(articleDbJsonPath)) {
             console.log(`Initialization from file '${articleDbJsonPath}'`);
             let articles: Article[] = Utils.fileToObject(articleDbJsonPath) as Article[];
-            const articlesSaved = this.repository.saveAll(articles);
+            const articlesSaved = await this.repository.saveAll(articles);
             this.loadingFinished(articlesSaved, 'json file');
-            this.initParserArticlesFromResource(Utils.getAllParserTypes(this.repository.findAll()));
+            const allArticles = await this.repository.findAll();
+            this.initParserArticlesFromResource(Utils.getAllParserTypes(allArticles));
         } else { // No stored articles
             this.initParserArticlesFromResource();
         }
@@ -95,11 +96,11 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
      * Update articles from all resources
      * @return articles that saved
      */
-    private updateArticles(data: (void | Article[])[]): Article[] {
+    private async updateArticles(data: (void | Article[])[]): Promise<Article[]> {
         const articlesMatrix: Article[][] = data.filter(value => value)
             .map(value => value as Article[]);
         const articles: Article[] = [].concat(...articlesMatrix);
-        return this.repository.saveAll(articles);
+        return await this.repository.saveAll(articles);
     }
 
     /**
@@ -113,8 +114,8 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         this.articleParsers
             .filter(parser => !excludeParser.includes(parser.getType()))
             .forEach(value => articleReadPromise.push(...value.getAll()));
-        Promise.all(articleReadPromise).then((data) => {
-            const articlesSaved = this.updateArticles(data);
+        Promise.all(articleReadPromise).then(async (data) => {
+            const articlesSaved = await this.updateArticles(data);
             this.loadingFinished(articlesSaved);
             ArticleManager.INIT_FINISH = true;
         });
@@ -124,15 +125,16 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
     /**
      * Delete articles without parser
      */
-    public deleteArticlesWithoutParser(): void {
-        const parserTypesPersisted: ParserType[] = Utils.getAllParserTypes(this.repository.findAll());
+    public async deleteArticlesWithoutParser(): Promise<void> {
+        const allArticles = await this.repository.findAll();
+        const parserTypesPersisted: ParserType[] = Utils.getAllParserTypes(allArticles);
         let parserTypes = this.articleParsers.map(value => value.getType());
         const deleteArticleParserTypes: ParserType[] = parserTypesPersisted
             .filter(parserName => !parserTypes.includes(parserName));
         if (deleteArticleParserTypes.length > 0) {
             console.log(`Articles without parser: [${deleteArticleParserTypes}], starting delete...`)
             TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(`Delete articles by parser: ${deleteArticleParserTypes}`)
-            this.repository.deleteByParserTypeIn(deleteArticleParserTypes);
+            await this.repository.deleteByParserTypeIn(deleteArticleParserTypes);
         }
     }
 
@@ -179,6 +181,17 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         return articleManager;
     }
 
+    /**
+     * Create PostgreSQL Manager Instance
+     */
+    public static createPostgresManager(): ArticleManager {
+        const { PostgresRepository } = require('../domain/repositories/PostgresRepository');
+        const postgresRepository = new PostgresRepository();
+        const articleManager = new ArticleManager(postgresRepository);
+        postgresRepository.articleListener = articleManager;
+        return articleManager;
+    }
+
     public newArticle(article: Article): void {
         if (ArticleManager.INIT_FINISH) {
             if (article.types.includes(ArticleType.SPRING)) {
@@ -195,15 +208,14 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
     /**
      * Synchronize all articles from all sources
      */
-    public sync(): void {
+    public async sync(): Promise<void> {
         TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel('Synchronize all articles from all sources');
         if (ArticleManager.INIT_FINISH) {
             const articleReadPromise: Promise<void | Article[]>[] = [];
             this.articleParsers.forEach(value => articleReadPromise.push(...value.getLatest()));
-            Promise.all(articleReadPromise).then((data) => {
-                const newArticles: Article[] = this.updateArticles(data);
-                this.loadingFinished(newArticles);
-            });
+            const data = await Promise.all(articleReadPromise);
+            const newArticles: Article[] = await this.updateArticles(data);
+            this.loadingFinished(newArticles);
         }
     }
 
@@ -223,11 +235,12 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         }
     }
 
-    private publishRandomSpringArticle() {
+    private async publishRandomSpringArticle() {
         if (ArticleManager.INIT_FINISH) {
 
             // Random Archive publish
-            let articles: Article[] = this.repository.findAll()
+            const allArticles = await this.repository.findAll();
+            let articles: Article[] = allArticles
                 .filter(value => !value.published && value.types.includes(ArticleType.SPRING)
                     && !EXCLUDE_PARSER_TYPE_PUBLISH.includes(value.parser));
             const article: Article = Utils.getRandomFromArray(articles);
@@ -241,11 +254,12 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         }
     }
 
-    private publishRandomJavaArticle() {
+    private async publishRandomJavaArticle() {
         if (ArticleManager.INIT_FINISH) {
 
             // Random Archive publish
-            let articles: Article[] = this.repository.findAll()
+            const allArticles = await this.repository.findAll();
+            let articles: Article[] = allArticles
                 .filter(value => !value.published && value.types.includes(ArticleType.JAVA)
                     && !EXCLUDE_PARSER_TYPE_PUBLISH.includes(value.parser));
             const article: Article = Utils.getRandomFromArray(articles);
@@ -268,16 +282,16 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         article.types.forEach(articleType => ArticleManager.incrementArticlePublished(articleType));
     }
 
-    commandDelete(ctx: any): any {
+    async commandDelete(ctx: any): Promise<any> {
         if (ArticleManager.INIT_FINISH) {
-            this.deleteArticlesWithoutParser();
+            await this.deleteArticlesWithoutParser();
             return ctx.reply('Delete all articles without parser');
         } else {
             return ctx.reply('Failed Delete all articles without parser: still in progress');
         }
     }
 
-    commandInit(ctx: any): any {
+    async commandInit(ctx: any): Promise<any> {
         if (ArticleManager.INIT_FINISH) {
             this.initParserArticlesFromResource();
             return ctx.reply('Init all articles started');
@@ -286,17 +300,17 @@ export class ArticleManager implements ArticleListener, TelegramBotCommandListen
         }
     }
 
-    commandSync(ctx: any): any {
+    async commandSync(ctx: any): Promise<any> {
         if (ArticleManager.INIT_FINISH) {
-            this.sync();
+            await this.sync();
             return ctx.reply('Synchronize started');
         } else {
             return ctx.reply('Failed Synchronize started: still in progress');
         }
     }
 
-    commandStatus(ctx: any): any {
-        const articles = this.repository.findAll();
+    async commandStatus(ctx: any): Promise<any> {
+        const articles = await this.repository.findAll();
         const articlesParserCount = Utils.mapToString(Utils.getMapParserTypeCounts(articles));
         const articlesTypeCount = Utils.mapToString(Utils.getMapArticleTypeCounts(articles));
         const message = `Articles status: ${articles.length}\n\n${articlesTypeCount}\n\n${articlesParserCount}`;

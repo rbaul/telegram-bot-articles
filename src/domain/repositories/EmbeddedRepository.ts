@@ -25,16 +25,17 @@ export class EmbeddedRepository implements Repository<Article> {
         this._articleListener = value;
     }
 
-    findByUrl(url: string): Article {
+    async findByUrl(url: string): Promise<Article> {
         return this.articles.get(url);
     }
 
-    findAll(): Article[] {
+    async findAll(): Promise<Article[]> {
         return Array.from(this.articles.values());
     }
 
-    save(article: Article): Article {
-        if (this.isExistByUrl(article.url)) {
+    async save(article: Article): Promise<Article> {
+        const exists = await this.isExistByUrl(article.url);
+        if (exists) {
             this.articles.set(article.url, article);
         } else {
             this.articles.set(article.url, article);
@@ -45,58 +46,68 @@ export class EmbeddedRepository implements Repository<Article> {
         return this.findByUrl(article.url);
     }
 
-    saveAll(articles: Article[]): Article[] {
-        const savedArticles = articles.filter(article => !this.isExistByUrl(article.url))
-            .map(article => this.save(article));
-        if (savedArticles && savedArticles.length > 0) { // Update DB json file for backup
-            this.saveToJsonFile();
+    async saveAll(articles: Article[]): Promise<Article[]> {
+        const savedArticles: Article[] = [];
+        for (const article of articles) {
+            const exists = await this.isExistByUrl(article.url);
+            if (!exists) {
+                const saved = await this.save(article);
+                savedArticles.push(saved);
+            }
+        }
+        if (savedArticles && savedArticles.length > 0) {
+            await this.saveToJsonFile();
         }
         return savedArticles;
     }
 
-    saveToJsonFile() {
-        Utils.objectToFile(articleDbJsonPath, this.findAll());
+    async saveToJsonFile(): Promise<void> {
+        const articles = await this.findAll();
+        Utils.objectToFile(articleDbJsonPath, articles);
     }
 
-    findBySite(site: SiteType): Article[] {
-        return this.findAll()
-            .filter(value => value.site === site);
+    async findBySite(site: SiteType): Promise<Article[]> {
+        const articles = await this.findAll();
+        return articles.filter(value => value.site === site);
     }
 
-    findByParser(parserType: ParserType): Article[] {
-        return this.findAll()
-            .filter(value => value.parser === parserType);
+    async findByParser(parserType: ParserType): Promise<Article[]> {
+        const articles = await this.findAll();
+        return articles.filter(value => value.parser === parserType);
     }
 
-    findByParserIn(parserTypes: ParserType[]): Article[] {
-        return this.findAll()
-            .filter(value => parserTypes.includes(value.parser));
+    async findByParserIn(parserTypes: ParserType[]): Promise<Article[]> {
+        const articles = await this.findAll();
+        return articles.filter(value => parserTypes.includes(value.parser));
     }
 
-    deleteByUrl(url: string): boolean {
+    async deleteByUrl(url: string): Promise<boolean> {
         return this.articles.delete(url);
     }
 
-    deleteByParserTypeIn(parserTypes: ParserType[]): void {
-        const articles: Article[] = this.findByParserIn(parserTypes);
-        articles.forEach(article => this.deleteByUrl(article.url));
+    async deleteByParserTypeIn(parserTypes: ParserType[]): Promise<void> {
+        const articles: Article[] = await this.findByParserIn(parserTypes);
+        for (const article of articles) {
+            await this.deleteByUrl(article.url);
+        }
         if (articles && articles.length > 0) {
-            this.saveToJsonFile();
+            await this.saveToJsonFile();
         }
     }
 
-    isExistByUrl(url: string): boolean {
+    async isExistByUrl(url: string): Promise<boolean> {
         return this.articles.has(url);
     }
 
     /**
      * Get articles number per site
      */
-    getMapTypeCounts(): Map<SiteType, number> {
+    async getMapTypeCounts(): Promise<Map<SiteType, number>> {
         const map: Map<SiteType, number> = new Map<SiteType, number>();
         for (let siteType in SiteType) {
             let type = SiteType[siteType];
-            map.set(type, this.findBySite(type).length)
+            const articles = await this.findBySite(type);
+            map.set(type, articles.length);
         }
         return map;
     }

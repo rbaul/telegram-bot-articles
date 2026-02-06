@@ -24,18 +24,21 @@ defaultRetryConfig.retries = 3;
 defaultRetryConfig.delay = 500;
 defaultRetryConfig.timeout = Number(process.env.RETRY_TIMEOUT) * 60 * 1000;
 
-const articleManager: ArticleManager = ArticleManager.createEmbeddedManager();
+const usePostgres = process.env.USE_POSTGRES === 'true';
+const articleManager: ArticleManager = usePostgres 
+    ? ArticleManager.createPostgresManager() 
+    : ArticleManager.createEmbeddedManager();
 
 app.get('/', ((req, res) => {
     console.log('Keep Alive request');
     res.sendStatus(200);
 }));
 
-app.get('/articles', (req, res) => {
+app.get('/articles', async (req, res) => {
 
     // let site: SiteType = req.query.site as SiteType;
 
-    let articles: Article[] = articleManager.repository.findAll();
+    let articles: Article[] = await articleManager.repository.findAll();
     res.send({
         size: articles.length,
         content: articles
