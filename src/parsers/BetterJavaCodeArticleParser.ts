@@ -2,7 +2,7 @@ import {Article, ArticleType, ParserType, SiteType} from '../domain/model/Articl
 import {ArticleParser} from './ArticleParser';
 
 const url = 'https://betterjavacode.com'; // URL we're scraping
-const numberOfPages = 20;
+const numberOfPages = 3;
 
 export class BetterJavaCodeArticleParser extends ArticleParser {
 

@@ -12,7 +12,7 @@ export abstract class VinsGuruIoArticleParser extends ArticleParser {
     }
 
     getUrl(): string {
-        return `https://www.vinsguru.com/category/${this.getCategory()}`;
+        return `https://blog.vinsguru.com/category/${this.getCategory()}`;
     }
 
     public getElementSelector(): string {

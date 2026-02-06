@@ -47,34 +47,34 @@ app.listen(port, () => {
     TelegramBotPublisher.getInstance().sendMessageToActivityLogChannel(`Started application...`);
 
     // Sync all resources
-    const syncRecurrenceRule: RecurrenceRule = new RecurrenceRule();
-    syncRecurrenceRule.hour = syncScheduler;
-    syncRecurrenceRule.minute = 0;
-    syncRecurrenceRule.tz = timeZone;
-    scheduleJob(syncRecurrenceRule, fireDate => {
-        console.log(`${fireDate} - Update all articles from all sources and publish all new...`);
-        articleManager.sync();
-    });
+    // const syncRecurrenceRule: RecurrenceRule = new RecurrenceRule();
+    // syncRecurrenceRule.hour = syncScheduler;
+    // syncRecurrenceRule.minute = 0;
+    // syncRecurrenceRule.tz = timeZone;
+    // scheduleJob(syncRecurrenceRule, fireDate => {
+    //     console.log(`${fireDate} - Update all articles from all sources and publish all new...`);
+    //     articleManager.sync();
+    // });
 
-    // Archive publisher scheduler
-    const dailyArchivePublisherRecurrenceRule: RecurrenceRule = new RecurrenceRule();
-    dailyArchivePublisherRecurrenceRule.hour = archiveScheduler;
-    dailyArchivePublisherRecurrenceRule.minute = 0;
-    dailyArchivePublisherRecurrenceRule.tz = timeZone;
-    scheduleJob(dailyArchivePublisherRecurrenceRule, fireDate => {
-        console.log(`${fireDate} - Archive articles publish...`);
-        articleManager.publishRandomArchiveArticles();
-    });
+    // // Archive publisher scheduler
+    // const dailyArchivePublisherRecurrenceRule: RecurrenceRule = new RecurrenceRule();
+    // dailyArchivePublisherRecurrenceRule.hour = archiveScheduler;
+    // dailyArchivePublisherRecurrenceRule.minute = 0;
+    // dailyArchivePublisherRecurrenceRule.tz = timeZone;
+    // scheduleJob(dailyArchivePublisherRecurrenceRule, fireDate => {
+    //     console.log(`${fireDate} - Archive articles publish...`);
+    //     articleManager.publishRandomArchiveArticles();
+    // });
 
-    // Daily clear counters
-    const dailyInitRecurrenceRule: RecurrenceRule = new RecurrenceRule();
-    dailyInitRecurrenceRule.hour = 0;
-    dailyInitRecurrenceRule.minute = 0;
-    dailyInitRecurrenceRule.tz = timeZone;
-    scheduleJob(dailyInitRecurrenceRule, fireDate => {
-        console.log(`${fireDate} - Init daily published counters...`);
-        ArticleManager.clearPublisherDailyCounter();
-    });
+    // // Daily clear counters
+    // const dailyInitRecurrenceRule: RecurrenceRule = new RecurrenceRule();
+    // dailyInitRecurrenceRule.hour = 0;
+    // dailyInitRecurrenceRule.minute = 0;
+    // dailyInitRecurrenceRule.tz = timeZone;
+    // scheduleJob(dailyInitRecurrenceRule, fireDate => {
+    //     console.log(`${fireDate} - Init daily published counters...`);
+    //     ArticleManager.clearPublisherDailyCounter();
+    // });
 
     process.on('SIGTERM', () => {
         console.log('SIGTERM received, cleaning up...');

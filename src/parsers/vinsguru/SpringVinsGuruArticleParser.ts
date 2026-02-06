@@ -1,7 +1,7 @@
 import {ArticleType, ParserType} from '../../domain/model/Article';
 import {VinsGuruIoArticleParser} from './VinsGuruArticleParser';
 
-const numberOfPages = 5;
+const numberOfPages = 3;
 
 export class SpringVinsGuruArticleParser extends VinsGuruIoArticleParser {
 

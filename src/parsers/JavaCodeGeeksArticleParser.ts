@@ -2,7 +2,7 @@ import {Article, ArticleType, ParserType, SiteType} from '../domain/model/Articl
 import {ArticleParser} from './ArticleParser';
 
 const url = 'https://www.javacodegeeks.com/category/java'; // URL we're scraping
-const numberOfPages = 4;
+const numberOfPages = 3;
 
 export class JavaCodeGeeksArticleParser extends ArticleParser {
 

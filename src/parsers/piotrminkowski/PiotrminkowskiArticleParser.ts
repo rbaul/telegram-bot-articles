@@ -2,7 +2,7 @@ import {Article, ArticleType, ParserType, SiteType} from '../../domain/model/Art
 import {ArticleParser} from '../ArticleParser';
 
 const url = 'https://piotrminkowski.com'; // URL we're scraping
-const numberOfPages = 16;
+const numberOfPages = 5;
 
 export class PiotrminkowskiArticleParser extends ArticleParser {
 

@@ -2,7 +2,7 @@ import {Article, ArticleType, ParserType, SiteType} from '../../domain/model/Art
 import {ArticleParser} from '../ArticleParser';
 
 const url = 'https://spring.io/blog'; // URL we're scraping
-const numberOfPages = 10;
+const numberOfPages = 3;
 
 export class BlogsSpringIoArticleParser extends ArticleParser {
 

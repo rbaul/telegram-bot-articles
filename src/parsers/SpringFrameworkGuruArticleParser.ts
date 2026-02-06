@@ -2,7 +2,7 @@ import {Article, ArticleType, ParserType, SiteType} from '../domain/model/Articl
 import {ArticleParser} from './ArticleParser';
 
 const url = 'https://springframework.guru/blog'; // URL we're scraping
-const numberOfPages = 17;
+const numberOfPages = 3;
 
 export class SpringFrameworkGuruArticleParser extends ArticleParser {
 
